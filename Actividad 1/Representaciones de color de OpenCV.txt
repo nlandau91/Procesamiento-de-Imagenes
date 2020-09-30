@@ -1,0 +1,13 @@
+OpenCV soporta:
+Grayscale
+RGB (BGR)
+BGR565
+BGR555 
+YCrCb
+HSV
+CIE XYZ
+luma-chroma (aka YCC)
+CIE Lab
+CIE Luv
+HLS
+YUV

@@ -1,0 +1,10 @@
+Teniendo instalada la libreria OpenCV4 y estando ubicado en la carpeta con los archivos .cpp:
+
+$ g++ Parte1.cpp -o Parte1 `pkg-config --cflags --libs opencv4`
+$ g++ Parte2.cpp -o Parte2 `pkg-config --cflags --libs opencv4`
+
+Ejecutar con 
+$ ./Parte1
+$ ./Parte2
+
+Las imagenes utilizadas son src1.jpg y src2.jpg, deben estar junto al binario, se pueden cambiar a gusto
