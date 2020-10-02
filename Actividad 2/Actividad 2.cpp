@@ -9,7 +9,7 @@ int main()
     //cargamos la imagen y la mostramos
     Mat img_orig = imread("img.png", IMREAD_COLOR);
     imshow("img_orig", img_orig);
-    waitKey(1);
+    waitKey(500);
 
     //la convertimos a hsv, ya que es mas facil diferenciar colores
     Mat img_hsv;
@@ -67,7 +67,11 @@ int main()
     cout << "Azul: " << objetos_azul << endl;
     cout << "Magenta: " << objetos_magenta << endl;
 
-    system("pause");
+    //system("pause");
+    cout << "Presione enter para continuar" << endl;
+	std::cin.clear();
+	cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+	cin.get();
     destroyAllWindows();
 }
 
