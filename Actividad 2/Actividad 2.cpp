@@ -7,7 +7,7 @@ using namespace cv;
 int main()
 {
     //cargamos la imagen y la mostramos
-    Mat img_orig = imread("img.jpg", IMREAD_COLOR);
+    Mat img_orig = imread("img.png", IMREAD_COLOR);
     imshow("img_orig", img_orig);
     waitKey(1);
 
