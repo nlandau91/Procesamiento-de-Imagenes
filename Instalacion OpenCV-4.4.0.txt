@@ -1,4 +1,4 @@
-Instalacion de OpenCV 4.x en distros basadas en debian:
+Instalacion de OpenCV 4.4.0 en distros basadas en debian:
 1) Instalar las dependencias necesarias
 
 $ sudo apt install build-essential cmake git pkg-config libgtk-3-dev \
@@ -12,6 +12,10 @@ $ sudo apt install build-essential cmake git pkg-config libgtk-3-dev \
 $ mkdir ~/opencv_build && cd ~/opencv_build
 $ git clone https://github.com/opencv/opencv.git
 $ git clone https://github.com/opencv/opencv_contrib.git
+
+2.1) Seleccionamos la version 4.4.0 
+
+$ git checkout 4.4.0
 
 3) Crear un directorio temporario para el build y entrar al mismo
 
