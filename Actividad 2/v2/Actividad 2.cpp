@@ -16,27 +16,32 @@ int main()
     cvtColor(img_orig, img_hsv, COLOR_BGR2HSV);
 
     //establecemos los rangos para cada color, dividimos por dos porque el rango va de 0 a 180, no a 360, restamos 1  en el tope superior porque los rangos son cerrados
-    int low_H_rojo1 = 0 / 2, high_H_rojo1 = 25 / 2 - 1;
+    int low_H_rojo1 = 0 / 2, high_H_rojo1 = 15 / 2 - 1;
     int low_H_naranja = 25 / 2, high_H_naranja = 36 / 2 - 1;
-    int low_H_amarillo = 36 / 2, high_H_amarillo = 60 / 2 - 1;
-    int low_H_rojo2 = 345 / 2, high_H_rojo2 = 360 / 2 - 1;
+    int low_H_amarillo = 39 / 2, high_H_amarillo = 55 / 2 - 1;
+    int low_H_rojo2 = 355 / 2, high_H_rojo2 = 360 / 2 - 1;
 
     //establecemos los rangos para el s y el v, esto nos sirve para que los blancos y negros no sean confundidos con algun color
-    int low_S = 60, high_S = 255;
-    int low_V = 60, high_V = 255;
+    int low_S = 100, high_S = 200;
+    int low_V = 100, high_V = 200;
 
     //Para cada rango, obtenemos una imagen con solamente los pixels que se encuentran en ese rango
     Mat en_rango_rojo1, en_rango_naranja, en_rango_amarillo, en_rango_rojo2;
-    inRange(img_hsv, Scalar(low_H_rojo1, low_S, low_V), Scalar(high_H_rojo1, high_S, high_V), en_rango_rojo1);
+    inRange(img_hsv, Scalar(low_H_rojo1, 40, low_V), Scalar(high_H_rojo1, high_S, high_V), en_rango_rojo1);
     inRange(img_hsv, Scalar(low_H_naranja, low_S, low_V), Scalar(high_H_naranja, high_S, high_V), en_rango_naranja);
     inRange(img_hsv, Scalar(low_H_amarillo, low_S, low_V), Scalar(high_H_amarillo, high_S, high_V), en_rango_amarillo);
-    inRange(img_hsv, Scalar(low_H_rojo2, low_S, low_V), Scalar(high_H_rojo2, high_S, high_V), en_rango_rojo2);
+    inRange(img_hsv, Scalar(low_H_rojo2, 40, low_V), Scalar(high_H_rojo2, high_S, high_V), en_rango_rojo2);
 
     //obtenemos la cantidad de pixeles que se encuentran dentro de cada rango
     int cant_rojo = countNonZero(en_rango_rojo1) + countNonZero(en_rango_rojo2);
     int cant_naranja = countNonZero(en_rango_naranja);
     int cant_amarillo = countNonZero(en_rango_amarillo);
 
+    //debug
+    cout << "Rojo: " << cant_rojo << endl;
+    cout << "Naranja: " << cant_naranja << endl;
+    cout << "Amarillo: " << cant_amarillo << endl;
+    
     //establecemos cuantos pixels ocupa un objeto
     int pixels_objeto;
     cout << "cuantos pixels ocupa un objeto?" << endl;
