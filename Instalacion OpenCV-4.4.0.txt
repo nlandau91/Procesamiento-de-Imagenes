@@ -11,7 +11,6 @@ $ sudo apt install build-essential cmake git pkg-config libgtk-3-dev \
 
 $ mkdir ~/opencv_build && cd ~/opencv_build
 $ git clone https://github.com/opencv/opencv.git
-$ git clone https://github.com/opencv/opencv_contrib.git
 
 2.1) Seleccionamos la version 4.4.0 
 
@@ -26,12 +25,8 @@ $ mkdir build && cd build
 
 $ cmake -D CMAKE_BUILD_TYPE=RELEASE \
     -D CMAKE_INSTALL_PREFIX=/usr/local \
-    -D INSTALL_C_EXAMPLES=ON \
-    -D INSTALL_PYTHON_EXAMPLES=ON \
-    -D OPENCV_GENERATE_PKGCONFIG=ON \
-    -D OPENCV_EXTRA_MODULES_PATH=~/opencv_build/opencv_contrib/modules \
-    -D BUILD_EXAMPLES=ON ..
-	
+    -D OPENCV_GENERATE_PKGCONFIG=ON ..
+
 5) Compilamos (para el comando -j usar la cantidad de hilos del cpu, se puede ver con $ nproc)
 
 $ make -j4

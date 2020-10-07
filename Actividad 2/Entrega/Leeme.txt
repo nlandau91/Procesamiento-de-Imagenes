@@ -1,0 +1,9 @@
+Para compilar:
+	$ g++ 'Actividad 2.cpp' -o output `pkg-config --cflags --libs opencv4`
+
+Ejecutar con:
+	$ ./output <nombre de la imagen>
+	
+Si no se ingresa un nombre de imagen, se usa por defecto img1.png
+Las imagenes img1.png e img2.png tienen galletas de aproximadamente 30000 pixeles
+Se diferencian colores rojo(rosa) naranja(marron) y amarillo
