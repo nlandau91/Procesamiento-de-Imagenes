@@ -1,0 +1,7 @@
+Para compilar:
+	$ g++ 'Actividad3.cpp' -o Actividad3 `pkg-config --cflags --libs opencv4`
+
+Ejecutar con:
+	$ ./Actividad3 [nombre de la imagen]
+	
+Si no se ingresa un nombre de imagen, se usa por defecto auto.jpg
