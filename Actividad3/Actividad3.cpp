@@ -22,16 +22,17 @@ int main(int argc, char* argv[])
     
     //(1) aplicamos filtro de la mediana
     Mat afterMedianFilter;
-    int kSize = 5;
-    medianBlur(src,afterMedianFilter,kSize);
+    medianBlur(src,afterMedianFilter,7);
     imshow("afterMedianFilter",afterMedianFilter);
     waitKey(200);
     
     //(2) detectamos bordes de la imagen en escala de grises usando Laplacian
     Mat grayscale;
     cvtColor(src,grayscale,COLOR_BGR2GRAY);
+    //cvtColor(afterMedianFilter,grayscale,COLOR_BGR2GRAY);
     Mat afterLaplace;
-    int scale = 1;
+    int kSize = 3;
+    int scale = 3;
     int delta = 0;
     int ddepth = CV_16S;
     Laplacian(grayscale,afterLaplace,ddepth,kSize,scale,delta,BORDER_DEFAULT);
