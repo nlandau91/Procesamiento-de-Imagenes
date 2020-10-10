@@ -8,10 +8,12 @@ using namespace cv;
 const int kSizeMedian_slider_max = 100;
 const int kSizeLaplacian_slider_max = 31;
 const int quantScale_slider_max = 255;
+const int scaleLaplacian_slider_max = 100;
+const int deltaLaplacian_slider_max = 100;
 int kSizeMedian_slider;
 int kSizeLaplacian_slider;
-int scale_slider;
-int delta_slider;
+int scaleLaplacian_slider;
+int deltaLaplacian_slider;
 int quantScale_slider;
 Mat src;
 Mat afterMedianFilter;
@@ -19,10 +21,10 @@ Mat edges;
 Mat requant;
 Mat result;
 int kSizeMedian = 7;
-int kSizeLaplacian = 5;
+int kSizeLaplacian = 7;
 int ddepth = CV_16S;
-int scale = 1;
-int delta = 0;
+int scaleLaplacian = 30;
+int deltaLaplacian = 0;
 int quantScale = 24;
 
 void showImages()
@@ -44,10 +46,9 @@ void paso2()
 {
     //(2) detectamos bordes de la imagen en escala de grises usando Laplacian
     Mat grayscale;
-    //cvtColor(src,grayscale,COLOR_BGR2GRAY);
     cvtColor(afterMedianFilter,grayscale,COLOR_BGR2GRAY);
     Mat afterLaplace;
-    Laplacian(grayscale,afterLaplace,ddepth,kSizeLaplacian,scale,delta,BORDER_DEFAULT);
+    Laplacian(grayscale,afterLaplace,ddepth,kSizeLaplacian,scaleLaplacian,deltaLaplacian,BORDER_DEFAULT);
     Mat absAfterLaplace;
     convertScaleAbs(afterLaplace,absAfterLaplace);
     bitwise_not(absAfterLaplace, edges);
@@ -77,8 +78,23 @@ void paso4()
 //callbacks de las trackbars
 static void trackbar_kSizeLaplacian( int, void* )
 {
-    //kSizeLaplacian = 2*floor(kSizeLaplacian_slider/2)+1; //tiene que ser impar y positivo
-    kSizeLaplacian += 2;
+    kSizeLaplacian = 2*floor(kSizeLaplacian_slider/2)+1; //tiene que ser impar y positivo
+    paso2();
+    paso4();
+    showImages();
+}
+
+static void trackbar_scaleLaplacian( int, void* )
+{
+    scaleLaplacian = scaleLaplacian_slider; //tiene que ser impar y positivo
+    paso2();
+    paso4();
+    showImages();
+}
+
+static void trackbar_deltaLaplacian( int, void* )
+{
+    deltaLaplacian = deltaLaplacian_slider; //tiene que ser impar y positivo
     paso2();
     paso4();
     showImages();
@@ -110,14 +126,14 @@ int main(int argc, char* argv[])
 {
     
     string src_img = "car.jpg";
-	// Check the number of parameters
-	if (argc < 2) {
-		std::cout << "No se ingreso un parametro, usando nombre de imagen por defecto 'car.jpg'" << endl;
-	}
-	else
-	{
-		src_img = argv[1];
-	}
+    // Check the number of parameters
+    if (argc < 2) {
+        std::cout << "No se ingreso un parametro, usando nombre de imagen por defecto 'car.jpg'" << endl;
+    }
+    else
+    {
+        src_img = argv[1];
+    }
     //cargamos la imagen
     src = imread(src_img, IMREAD_COLOR);
     if( src.empty() ) { cout << "Error loading src \n"; return -1; }
@@ -146,6 +162,10 @@ int main(int argc, char* argv[])
     createTrackbar( "kSizeMedian", "result", &kSizeMedian_slider, kSizeMedian_slider_max, trackbar_kSizeMedian);
     kSizeLaplacian_slider = kSizeLaplacian;
     createTrackbar( "kSizeLaplace", "result", &kSizeLaplacian_slider, kSizeLaplacian_slider_max, trackbar_kSizeLaplacian);
+    scaleLaplacian_slider = scaleLaplacian;
+    createTrackbar( "scaleLaplace", "result", &scaleLaplacian_slider, scaleLaplacian_slider_max, trackbar_scaleLaplacian);
+    deltaLaplacian_slider = deltaLaplacian;
+    createTrackbar( "deltaLaplace", "result", &deltaLaplacian_slider, deltaLaplacian_slider_max, trackbar_deltaLaplacian);
     quantScale_slider = quantScale;
     createTrackbar( "quantScale", "result", &quantScale_slider, quantScale_slider_max, trackbar_quantScale);
 
@@ -154,7 +174,7 @@ int main(int argc, char* argv[])
     waitKey(0);
     //done
     cout << "Presione enter para continuar" << endl;
-	std::cin.clear();
-	cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-	cin.get();
+    std::cin.clear();
+    cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    cin.get();
 }
