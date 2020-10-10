@@ -21,9 +21,9 @@ Mat edges;
 Mat requant;
 Mat result;
 int kSizeMedian = 7;
-int kSizeLaplacian = 7;
+int kSizeLaplacian = 3;
 int ddepth = CV_16S;
-int scaleLaplacian = 30;
+int scaleLaplacian = 5;
 int deltaLaplacian = 0;
 int quantScale = 24;
 
@@ -45,13 +45,20 @@ void paso1()
 void paso2()
 {
     //(2) detectamos bordes de la imagen en escala de grises usando Laplacian
+    //convertimos la imagen a escala de gris
     Mat grayscale;
     cvtColor(afterMedianFilter,grayscale,COLOR_BGR2GRAY);
+    //aplicamos el filtro laplaciano
     Mat afterLaplace;
     Laplacian(grayscale,afterLaplace,ddepth,kSizeLaplacian,scaleLaplacian,deltaLaplacian,BORDER_DEFAULT);
+    //volvemos a convertir la imagen a escala de gris
     Mat absAfterLaplace;
     convertScaleAbs(afterLaplace,absAfterLaplace);
-    bitwise_not(absAfterLaplace, edges);
+    //invertimos la imagen para que los bordes sean negros
+    Mat edges_grayscale;
+    bitwise_not(absAfterLaplace, edges_grayscale);
+    //aplicamos la funcion de umbral para que los bordes esten mejor definidos
+    threshold(edges_grayscale, edges, 150, 255, THRESH_BINARY);
 }
 
 void paso3()
@@ -72,10 +79,12 @@ void paso3()
 void paso4()
 {
     //(4) agregamos a (3) los bordes obtenidos en (2)
+    result = Mat::zeros(result.size(),result.type());
     bitwise_and(requant,requant,result,edges);
 }
 
 //callbacks de las trackbars
+//en todas las callbacks lo que se hace es actualizar el parametro y volver a llamar a los pasos
 static void trackbar_kSizeLaplacian( int, void* )
 {
     kSizeLaplacian = 2*floor(kSizeLaplacian_slider/2)+1; //tiene que ser impar y positivo
