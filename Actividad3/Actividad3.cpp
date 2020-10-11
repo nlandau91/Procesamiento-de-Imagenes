@@ -1,5 +1,6 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#include <thread>
 
 using namespace std;
 using namespace cv;
@@ -130,8 +131,19 @@ static void trackbar_kSizeMedian( int, void* )
     showImages();
 }
 
+//paramos cuando se ingresa q
+//lo hacemos en un thread para no bloquear la ejecucion
+void checkDone(bool * done)
+{
+    char c = 0;
+    while( c != 'q' )
+    {
+        c = cin.get();
+    }
+    *done = true;
+}
 
-int main(int argc, char* argv[])
+int main(int argc, char * argv[])
 {
     
     string src_img = "car.jpg";
@@ -180,10 +192,14 @@ int main(int argc, char* argv[])
 
     //mostramos las imagenes
     showImages();
-    waitKey(0);
-    //done
-    cout << "Presione enter para continuar" << endl;
-    std::cin.clear();
-    cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    cin.get();
+
+    //continuamos la ejecucion hasta que se ingrese 'q'
+    cout << "Ingrese 'q' para terminar." << endl;
+    bool done = false;
+    thread t1(checkDone, &done);
+    while(!done)
+    {
+        waitKey(200);
+    }
+    t1.join();
 }
