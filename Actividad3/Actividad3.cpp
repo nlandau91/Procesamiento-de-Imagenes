@@ -177,18 +177,19 @@ int main(int argc, char * argv[])
     namedWindow("edges",WINDOW_AUTOSIZE);
     namedWindow("requant",WINDOW_AUTOSIZE);
     namedWindow("result",WINDOW_AUTOSIZE);
+    namedWindow("trackbars", WINDOW_FREERATIO);
     
     //agregamos las trackbars
     kSizeMedian_slider = kSizeMedian;
-    createTrackbar( "kSizeMedian", "result", &kSizeMedian_slider, kSizeMedian_slider_max, trackbar_kSizeMedian);
+    createTrackbar( "kSizeMedian", "trackbars", &kSizeMedian_slider, kSizeMedian_slider_max, trackbar_kSizeMedian);
     kSizeLaplacian_slider = kSizeLaplacian;
-    createTrackbar( "kSizeLaplace", "result", &kSizeLaplacian_slider, kSizeLaplacian_slider_max, trackbar_kSizeLaplacian);
+    createTrackbar( "kSizeLaplace", "trackbars", &kSizeLaplacian_slider, kSizeLaplacian_slider_max, trackbar_kSizeLaplacian);
     scaleLaplacian_slider = scaleLaplacian;
-    createTrackbar( "scaleLaplace", "result", &scaleLaplacian_slider, scaleLaplacian_slider_max, trackbar_scaleLaplacian);
+    createTrackbar( "scaleLaplace", "trackbars", &scaleLaplacian_slider, scaleLaplacian_slider_max, trackbar_scaleLaplacian);
     deltaLaplacian_slider = deltaLaplacian;
-    createTrackbar( "deltaLaplace", "result", &deltaLaplacian_slider, deltaLaplacian_slider_max, trackbar_deltaLaplacian);
+    createTrackbar( "deltaLaplace", "trackbars", &deltaLaplacian_slider, deltaLaplacian_slider_max, trackbar_deltaLaplacian);
     quantScale_slider = quantScale;
-    createTrackbar( "quantScale", "result", &quantScale_slider, quantScale_slider_max, trackbar_quantScale);
+    createTrackbar( "quantScale", "trackbars", &quantScale_slider, quantScale_slider_max, trackbar_quantScale);
 
     //mostramos las imagenes
     showImages();
@@ -202,4 +203,5 @@ int main(int argc, char * argv[])
         waitKey(200);
     }
     t1.join();
+    destroyAllWindows();
 }
