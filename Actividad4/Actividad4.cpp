@@ -3,17 +3,156 @@
 #include <thread>
 #include "../include/tinyfiledialogs/tinyfiledialogs.h"
 
-int main()
+//algunas variables globales, para el control de los sliders
+const int kSizeMedian_slider_max = 100;
+const int kSizeLaplacian_slider_max = 31;
+const int quantScale_slider_max = 255;
+const int scaleLaplacian_slider_max = 100;
+const int deltaLaplacian_slider_max = 100;
+int kSizeMedian_slider;
+int kSizeLaplacian_slider;
+int scaleLaplacian_slider;
+int deltaLaplacian_slider;
+int quantScale_slider;
+cv::Mat src;
+cv::Mat afterMedianFilter;
+cv::Mat edges;
+cv::Mat requant;
+cv::Mat result;
+int kSizeMedian = 7;
+int kSizeLaplacian = 3;
+int ddepth = CV_16S;
+int scaleLaplacian = 5;
+int deltaLaplacian = 0;
+int quantScale = 24;
+
+void showImages()
 {
-    char const * lTheOpenFileName;
-    lTheOpenFileName = tinyfd_openFileDialog(
+    cv::imshow("original",src);
+    cv::imshow("afterMedianFilter", afterMedianFilter);
+    cv::imshow("edges",edges);
+    cv::imshow("requant",requant);
+    cv::imshow("result",result);
+}
+
+void paso1()
+{
+    //(1) aplicamos filtro de la mediana
+    cv::medianBlur(src,afterMedianFilter,kSizeMedian); 
+}
+
+void paso2()
+{
+    //(2) detectamos bordes de la imagen en escala de grises usando Laplacian
+    //convertimos la imagen a escala de gris
+    cv::Mat grayscale;
+    cv::cvtColor(afterMedianFilter,grayscale,cv::COLOR_BGR2GRAY);
+    //aplicamos el filtro laplaciano
+    cv::Mat afterLaplace;
+    cv::Laplacian(grayscale,afterLaplace,ddepth,kSizeLaplacian,scaleLaplacian,deltaLaplacian,cv::BORDER_DEFAULT);
+    //volvemos a convertir la imagen a escala de gris
+    cv::Mat absAfterLaplace;
+    cv::convertScaleAbs(afterLaplace,absAfterLaplace);
+    //invertimos la imagen para que los bordes sean negros
+    cv::Mat edges_grayscale;
+    cv::bitwise_not(absAfterLaplace, edges_grayscale);
+    //aplicamos la funcion de umbral para que los bordes esten mejor definidos
+    cv::threshold(edges_grayscale, edges, 150, 255, cv::THRESH_BINARY);
+}
+
+void paso3()
+{
+    //(3) reducimos la cantidad de colores en (1)
+    requant = afterMedianFilter.clone();
+    for(int i = 0; i < requant.rows; i++)
+    {
+        for(int j = 0; j < requant.cols; j++)
+        {
+           requant.at<cv::Vec3b>(i,j)[0] = floor(requant.at<cv::Vec3b>(i,j)[0] / quantScale) * quantScale;
+           requant.at<cv::Vec3b>(i,j)[1] = floor(requant.at<cv::Vec3b>(i,j)[1] / quantScale) * quantScale;
+           requant.at<cv::Vec3b>(i,j)[2] = floor(requant.at<cv::Vec3b>(i,j)[2] / quantScale) * quantScale;
+        }
+    }
+}
+
+void paso4()
+{
+    //(4) agregamos a (3) los bordes obtenidos en (2)
+    result = cv::Mat::zeros(result.size(),result.type());
+    cv::bitwise_and(requant,requant,result,edges);
+}
+
+//callbacks de las trackbars
+//en todas las callbacks lo que se hace es actualizar el parametro y volver a llamar a los pasos
+static void trackbar_kSizeLaplacian( int, void* )
+{
+    kSizeLaplacian = 2*floor(kSizeLaplacian_slider/2)+1; //tiene que ser impar y positivo
+    paso2();
+    paso4();
+    showImages();
+}
+
+static void trackbar_scaleLaplacian( int, void* )
+{
+    scaleLaplacian = scaleLaplacian_slider; //tiene que ser impar y positivo
+    paso2();
+    paso4();
+    showImages();
+}
+
+static void trackbar_deltaLaplacian( int, void* )
+{
+    deltaLaplacian = deltaLaplacian_slider; //tiene que ser impar y positivo
+    paso2();
+    paso4();
+    showImages();
+}
+
+static void trackbar_quantScale( int, void* )
+{
+    if(quantScale_slider > 0)
+    {
+        quantScale = quantScale_slider;
+        paso3();
+        paso4();
+        showImages();
+    }
+}
+
+static void trackbar_kSizeMedian( int, void* )
+{
+    kSizeMedian = 2*floor(kSizeMedian_slider/2)+1; //tiene que ser impar y >1
+    paso1();
+    paso2();
+    paso3();
+    paso4();
+    showImages();
+}
+
+//paramos cuando se ingresa q
+//lo hacemos en un thread para no bloquear la ejecucion
+void checkDone(bool * done)
+{
+    char c = 0;
+    while( c != 'q' )
+    {
+        c = std::cin.get();
+    }
+    *done = true;
+}
+
+int main(int argc, char * argv[])
+{
+    
+    char const * src_img;
+    src_img = tinyfd_openFileDialog(
 		"Ingrese una imagen",
 		"",
 		0,
 		NULL,
 		NULL,
 		0);
-    if (! lTheOpenFileName)
+    if (! src_img)
 	{
 		tinyfd_messageBox(
 			"Error",
@@ -23,13 +162,57 @@ int main()
 			0);
 		return 1 ;
 	}
-	std::cout << "testing" << std::endl;
 	
-	std::cout << lTheOpenFileName << std::endl;
+	src = cv::imread(src_img, cv::IMREAD_COLOR);
+    if( src.empty() ) 
+    { 
+    std::cout << "Error loading src \n";
+     return -1; 
+     }
     
-    //FILE * lIn;
+    //(1) aplicamos filtro de la mediana
+    paso1();    
     
+    //(2) detectamos bordes de la imagen en escala de grises usando Laplacian
+    paso2();
     
+    //(3) reducimos la cantidad de colores en (1)
+    paso3();
     
-    return 0;
+    //(4) agregamos a (3) los bordes obtenidos en (2)
+    paso4();
+    
+    //creamos las ventanas
+    cv::namedWindow("original",cv::WINDOW_AUTOSIZE);
+    cv::namedWindow("afterMedianFilter",cv::WINDOW_AUTOSIZE);
+    cv::namedWindow("edges",cv::WINDOW_AUTOSIZE);
+    cv::namedWindow("requant",cv::WINDOW_AUTOSIZE);
+    cv::namedWindow("result",cv::WINDOW_AUTOSIZE);
+    cv::namedWindow("trackbars", cv::WINDOW_FREERATIO);
+    
+    //agregamos las trackbars
+    kSizeMedian_slider = kSizeMedian;
+    cv::createTrackbar( "kSizeMedian", "trackbars", &kSizeMedian_slider, kSizeMedian_slider_max, trackbar_kSizeMedian);
+    kSizeLaplacian_slider = kSizeLaplacian;
+    cv::createTrackbar( "kSizeLaplace", "trackbars", &kSizeLaplacian_slider, kSizeLaplacian_slider_max, trackbar_kSizeLaplacian);
+    scaleLaplacian_slider = scaleLaplacian;
+    cv::createTrackbar( "scaleLaplace", "trackbars", &scaleLaplacian_slider, scaleLaplacian_slider_max, trackbar_scaleLaplacian);
+    deltaLaplacian_slider = deltaLaplacian;
+    cv::createTrackbar( "deltaLaplace", "trackbars", &deltaLaplacian_slider, deltaLaplacian_slider_max, trackbar_deltaLaplacian);
+    quantScale_slider = quantScale;
+    cv::createTrackbar( "quantScale", "trackbars", &quantScale_slider, quantScale_slider_max, trackbar_quantScale);
+
+    //mostramos las imagenes
+    showImages();
+
+    //continuamos la ejecucion hasta que se ingrese 'q'
+    std::cout << "Ingrese 'q' para terminar." << std::endl;
+    bool done = false;
+    std::thread t1(checkDone, &done);
+    while(!done)
+    {
+        cv::waitKey(200);
+    }
+    t1.join();
+    cv::destroyAllWindows();
 }

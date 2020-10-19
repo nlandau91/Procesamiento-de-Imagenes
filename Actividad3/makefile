@@ -1,5 +1,5 @@
 #OBJS specifies which files to compile as part of the project
-OBJS = Actividad3.cpp
+OBJS = Actividad3.cpp ../include/tinyfiledialogs/tinyfiledialogs.c
 
 #CC specifies which compiler we're using
 CC = g++

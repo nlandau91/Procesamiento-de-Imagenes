@@ -1,9 +1,7 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <thread>
-
-using namespace std;
-using namespace cv;
+#include "../include/tinyfiledialogs/tinyfiledialogs.h"
 
 //algunas variables globales, para el control de los sliders
 const int kSizeMedian_slider_max = 100;
@@ -16,50 +14,52 @@ int kSizeLaplacian_slider;
 int scaleLaplacian_slider;
 int deltaLaplacian_slider;
 int quantScale_slider;
-Mat src;
-Mat afterMedianFilter;
-Mat edges;
-Mat requant;
-Mat result;
+cv::Mat src;
+cv::Mat afterMedianFilter;
+cv::Mat edges;
+cv::Mat requant;
+cv::Mat result;
 int kSizeMedian = 7;
 int kSizeLaplacian = 3;
 int ddepth = CV_16S;
 int scaleLaplacian = 5;
 int deltaLaplacian = 0;
 int quantScale = 24;
+char const * src_img = NULL;
+bool newLoad = false;
 
 void showImages()
 {
-    imshow("original",src);
-    imshow("afterMedianFilter", afterMedianFilter);
-    imshow("edges",edges);
-    imshow("requant",requant);
-    imshow("result",result);
+    cv::imshow("original",src);
+    cv::imshow("afterMedianFilter", afterMedianFilter);
+    cv::imshow("edges",edges);
+    cv::imshow("requant",requant);
+    cv::imshow("result",result);
 }
 
 void paso1()
 {
     //(1) aplicamos filtro de la mediana
-    medianBlur(src,afterMedianFilter,kSizeMedian); 
+    cv::medianBlur(src,afterMedianFilter,kSizeMedian); 
 }
 
 void paso2()
 {
     //(2) detectamos bordes de la imagen en escala de grises usando Laplacian
     //convertimos la imagen a escala de gris
-    Mat grayscale;
-    cvtColor(afterMedianFilter,grayscale,COLOR_BGR2GRAY);
+    cv::Mat grayscale;
+    cv::cvtColor(afterMedianFilter,grayscale,cv::COLOR_BGR2GRAY);
     //aplicamos el filtro laplaciano
-    Mat afterLaplace;
-    Laplacian(grayscale,afterLaplace,ddepth,kSizeLaplacian,scaleLaplacian,deltaLaplacian,BORDER_DEFAULT);
+    cv::Mat afterLaplace;
+    cv::Laplacian(grayscale,afterLaplace,ddepth,kSizeLaplacian,scaleLaplacian,deltaLaplacian,cv::BORDER_DEFAULT);
     //volvemos a convertir la imagen a escala de gris
-    Mat absAfterLaplace;
-    convertScaleAbs(afterLaplace,absAfterLaplace);
+    cv::Mat absAfterLaplace;
+    cv::convertScaleAbs(afterLaplace,absAfterLaplace);
     //invertimos la imagen para que los bordes sean negros
-    Mat edges_grayscale;
-    bitwise_not(absAfterLaplace, edges_grayscale);
+    cv::Mat edges_grayscale;
+    cv::bitwise_not(absAfterLaplace, edges_grayscale);
     //aplicamos la funcion de umbral para que los bordes esten mejor definidos
-    threshold(edges_grayscale, edges, 150, 255, THRESH_BINARY);
+    cv::threshold(edges_grayscale, edges, 150, 255, cv::THRESH_BINARY);
 }
 
 void paso3()
@@ -70,9 +70,9 @@ void paso3()
     {
         for(int j = 0; j < requant.cols; j++)
         {
-           requant.at<Vec3b>(i,j)[0] = floor(requant.at<Vec3b>(i,j)[0] / quantScale) * quantScale;
-           requant.at<Vec3b>(i,j)[1] = floor(requant.at<Vec3b>(i,j)[1] / quantScale) * quantScale;
-           requant.at<Vec3b>(i,j)[2] = floor(requant.at<Vec3b>(i,j)[2] / quantScale) * quantScale;
+           requant.at<cv::Vec3b>(i,j)[0] = floor(requant.at<cv::Vec3b>(i,j)[0] / quantScale) * quantScale;
+           requant.at<cv::Vec3b>(i,j)[1] = floor(requant.at<cv::Vec3b>(i,j)[1] / quantScale) * quantScale;
+           requant.at<cv::Vec3b>(i,j)[2] = floor(requant.at<cv::Vec3b>(i,j)[2] / quantScale) * quantScale;
         }
     }
 }
@@ -80,9 +80,10 @@ void paso3()
 void paso4()
 {
     //(4) agregamos a (3) los bordes obtenidos en (2)
-    result = Mat::zeros(result.size(),result.type());
-    bitwise_and(requant,requant,result,edges);
+    result = cv::Mat::zeros(result.size(),result.type());
+    cv::bitwise_and(requant,requant,result,edges);
 }
+
 
 //callbacks de las trackbars
 //en todas las callbacks lo que se hace es actualizar el parametro y volver a llamar a los pasos
@@ -91,7 +92,7 @@ static void trackbar_kSizeLaplacian( int, void* )
     kSizeLaplacian = 2*floor(kSizeLaplacian_slider/2)+1; //tiene que ser impar y positivo
     paso2();
     paso4();
-    showImages();
+    //showImages();
 }
 
 static void trackbar_scaleLaplacian( int, void* )
@@ -99,7 +100,7 @@ static void trackbar_scaleLaplacian( int, void* )
     scaleLaplacian = scaleLaplacian_slider; //tiene que ser impar y positivo
     paso2();
     paso4();
-    showImages();
+    //showImages();
 }
 
 static void trackbar_deltaLaplacian( int, void* )
@@ -107,7 +108,7 @@ static void trackbar_deltaLaplacian( int, void* )
     deltaLaplacian = deltaLaplacian_slider; //tiene que ser impar y positivo
     paso2();
     paso4();
-    showImages();
+    //showImages();
 }
 
 static void trackbar_quantScale( int, void* )
@@ -117,7 +118,7 @@ static void trackbar_quantScale( int, void* )
         quantScale = quantScale_slider;
         paso3();
         paso4();
-        showImages();
+        //showImages();
     }
 }
 
@@ -128,7 +129,7 @@ static void trackbar_kSizeMedian( int, void* )
     paso2();
     paso3();
     paso4();
-    showImages();
+    //showImages();
 }
 
 //paramos cuando se ingresa q
@@ -138,26 +139,65 @@ void checkDone(bool * done)
     char c = 0;
     while( c != 'q' )
     {
-        c = cin.get();
+        c = std::cin.get();
     }
     *done = true;
 }
 
+void btn_callback(int event, int x, int y, int flags, void* userdata)
+{
+    if(event == cv::EVENT_LBUTTONDOWN)
+    {
+        src_img = tinyfd_openFileDialog(
+		"Ingrese una imagen",
+		"",
+		0,
+		NULL,
+		NULL,
+		0);
+        if (! src_img)
+	    {
+		    tinyfd_messageBox(
+			    "Error",
+			    "Open file name is NULL",
+			    "ok",
+			    "error",
+			    0);
+	    }
+	    else
+	    {
+	    src = cv::imread(src_img,cv::IMREAD_UNCHANGED);
+	    newLoad = true;
+	    }
+    }
+}
+
 int main(int argc, char * argv[])
 {
+    //armado de la gui
+    //creamos la ventana de las trackbars y el boton de carga
+    cv::namedWindow("trackbars", cv::WINDOW_FREERATIO);   
+    //agregamos las trackbars
+    kSizeMedian_slider = kSizeMedian;
+    cv::createTrackbar( "kSizeMedian", "trackbars", &kSizeMedian_slider, kSizeMedian_slider_max, trackbar_kSizeMedian);
+    kSizeLaplacian_slider = kSizeLaplacian;
+    cv::createTrackbar( "kSizeLaplace", "trackbars", &kSizeLaplacian_slider, kSizeLaplacian_slider_max, trackbar_kSizeLaplacian);
+    scaleLaplacian_slider = scaleLaplacian;
+    cv::createTrackbar( "scaleLaplace", "trackbars", &scaleLaplacian_slider, scaleLaplacian_slider_max, trackbar_scaleLaplacian);
+    deltaLaplacian_slider = deltaLaplacian;
+    cv::createTrackbar( "deltaLaplace", "trackbars", &deltaLaplacian_slider, deltaLaplacian_slider_max, trackbar_deltaLaplacian);
+    quantScale_slider = quantScale;
+    cv::createTrackbar( "quantScale", "trackbars", &quantScale_slider, quantScale_slider_max, trackbar_quantScale);
+    //creamos el boton de carga
+    cv::Mat button;
+    button = cv::imread("../res/btn_load.png",cv::IMREAD_UNCHANGED);
+    cv::setMouseCallback("trackbars",btn_callback);
+    cv::imshow("trackbars",button);
     
-    string src_img = "car.jpg";
-    // Check the number of parameters
-    if (argc < 2) {
-        std::cout << "No se ingreso un parametro, usando nombre de imagen por defecto 'car.jpg'" << endl;
-    }
-    else
+    while(!src_img)
     {
-        src_img = argv[1];
+        cv::waitKey(200);
     }
-    //cargamos la imagen
-    src = imread(src_img, IMREAD_COLOR);
-    if( src.empty() ) { cout << "Error loading src \n"; return -1; }
     
     //(1) aplicamos filtro de la mediana
     paso1();    
@@ -171,37 +211,33 @@ int main(int argc, char * argv[])
     //(4) agregamos a (3) los bordes obtenidos en (2)
     paso4();
     
-    //creamos las ventanas
-    namedWindow("original",WINDOW_AUTOSIZE);
-    namedWindow("afterMedianFilter",WINDOW_AUTOSIZE);
-    namedWindow("edges",WINDOW_AUTOSIZE);
-    namedWindow("requant",WINDOW_AUTOSIZE);
-    namedWindow("result",WINDOW_AUTOSIZE);
-    namedWindow("trackbars", WINDOW_FREERATIO);
-    
-    //agregamos las trackbars
-    kSizeMedian_slider = kSizeMedian;
-    createTrackbar( "kSizeMedian", "trackbars", &kSizeMedian_slider, kSizeMedian_slider_max, trackbar_kSizeMedian);
-    kSizeLaplacian_slider = kSizeLaplacian;
-    createTrackbar( "kSizeLaplace", "trackbars", &kSizeLaplacian_slider, kSizeLaplacian_slider_max, trackbar_kSizeLaplacian);
-    scaleLaplacian_slider = scaleLaplacian;
-    createTrackbar( "scaleLaplace", "trackbars", &scaleLaplacian_slider, scaleLaplacian_slider_max, trackbar_scaleLaplacian);
-    deltaLaplacian_slider = deltaLaplacian;
-    createTrackbar( "deltaLaplace", "trackbars", &deltaLaplacian_slider, deltaLaplacian_slider_max, trackbar_deltaLaplacian);
-    quantScale_slider = quantScale;
-    createTrackbar( "quantScale", "trackbars", &quantScale_slider, quantScale_slider_max, trackbar_quantScale);
-
+    //creamos las ventanas de las imagenes
+    cv::namedWindow("original",cv::WINDOW_AUTOSIZE);
+    cv::namedWindow("afterMedianFilter",cv::WINDOW_AUTOSIZE);
+    cv::namedWindow("edges",cv::WINDOW_AUTOSIZE);
+    cv::namedWindow("requant",cv::WINDOW_AUTOSIZE);
+    cv::namedWindow("result",cv::WINDOW_AUTOSIZE);
+   
     //mostramos las imagenes
     showImages();
 
     //continuamos la ejecucion hasta que se ingrese 'q'
-    cout << "Ingrese 'q' para terminar." << endl;
+    std::cout << "Ingrese 'q' para terminar." << std::endl;
     bool done = false;
-    thread t1(checkDone, &done);
+    std::thread t2(checkDone, &done);
     while(!done)
     {
-        waitKey(200);
+        if(newLoad)
+        {
+            paso1();
+            paso2();
+            paso3();
+            paso4();
+            newLoad = false;
+        }
+        showImages();
+        cv::waitKey(200);
     }
-    t1.join();
-    destroyAllWindows();
+    t2.join();
+    cv::destroyAllWindows();
 }
