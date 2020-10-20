@@ -137,11 +137,11 @@ static void trackbar_kSizeMedian( int, void* )
 void checkDone(bool * done)
 {
     char c = 0;
-    while( c != 'q' )
+    while(!done)
     {
-        c = std::cin.get();
+        *done = 'q' == (c = std::cin.get());
     }
-    *done = true;
+
 }
 
 void btn_callback(int event, int x, int y, int flags, void* userdata)
@@ -174,9 +174,20 @@ void btn_callback(int event, int x, int y, int flags, void* userdata)
 
 int main(int argc, char * argv[])
 {
-    //armado de la gui
+
     //creamos la ventana de las trackbars y el boton de carga
     cv::namedWindow("trackbars", cv::WINDOW_FREERATIO);   
+    
+    //creamos el boton de carga
+    cv::Mat button;
+    button = cv::imread("../res/btn_load.png",cv::IMREAD_UNCHANGED);
+    cv::setMouseCallback("trackbars",btn_callback);
+    cv::imshow("trackbars",button);
+    
+    while(!src_img)
+    {
+        cv::waitKey(200);
+    }
     //agregamos las trackbars
     kSizeMedian_slider = kSizeMedian;
     cv::createTrackbar( "kSizeMedian", "trackbars", &kSizeMedian_slider, kSizeMedian_slider_max, trackbar_kSizeMedian);
@@ -188,17 +199,6 @@ int main(int argc, char * argv[])
     cv::createTrackbar( "deltaLaplace", "trackbars", &deltaLaplacian_slider, deltaLaplacian_slider_max, trackbar_deltaLaplacian);
     quantScale_slider = quantScale;
     cv::createTrackbar( "quantScale", "trackbars", &quantScale_slider, quantScale_slider_max, trackbar_quantScale);
-    //creamos el boton de carga
-    cv::Mat button;
-    button = cv::imread("../res/btn_load.png",cv::IMREAD_UNCHANGED);
-    cv::setMouseCallback("trackbars",btn_callback);
-    cv::imshow("trackbars",button);
-    
-    while(!src_img)
-    {
-        cv::waitKey(200);
-    }
-    
     //(1) aplicamos filtro de la mediana
     paso1();    
     
@@ -212,11 +212,11 @@ int main(int argc, char * argv[])
     paso4();
     
     //creamos las ventanas de las imagenes
-    cv::namedWindow("original",cv::WINDOW_AUTOSIZE);
-    cv::namedWindow("afterMedianFilter",cv::WINDOW_AUTOSIZE);
-    cv::namedWindow("edges",cv::WINDOW_AUTOSIZE);
-    cv::namedWindow("requant",cv::WINDOW_AUTOSIZE);
-    cv::namedWindow("result",cv::WINDOW_AUTOSIZE);
+    cv::namedWindow("original",cv::WINDOW_NORMAL);
+    cv::namedWindow("afterMedianFilter",cv::WINDOW_NORMAL);
+    cv::namedWindow("edges",cv::WINDOW_NORMAL);
+    cv::namedWindow("requant",cv::WINDOW_NORMAL);
+    cv::namedWindow("result",cv::WINDOW_NORMAL);
    
     //mostramos las imagenes
     showImages();
@@ -237,6 +237,19 @@ int main(int argc, char * argv[])
         }
         showImages();
         cv::waitKey(200);
+        //checkeamos si se cierra la ventana de las trackbars
+        try
+        {
+            cv::Rect rect = cv::getWindowImageRect("trackbars");
+        } catch ( cv::Exception e )
+        {
+            done == true;
+            t2.join();
+            cv::destroyAllWindows();
+            return 0;
+        }
+        
+
     }
     t2.join();
     cv::destroyAllWindows();
