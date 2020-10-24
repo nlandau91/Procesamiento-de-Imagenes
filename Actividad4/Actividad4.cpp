@@ -24,33 +24,33 @@ void checkDone(bool * done)
     }
 }
 
+//callback del boton de carga
 void btn_callback(int event, int x, int y, int flags, void* data)
 {
     if(event == cv::EVENT_LBUTTONDOWN)
     {
-        (*userdata)data
-        src_img = tinyfd_openFileDialog("Ingrese una imagen","",0,NULL,NULL,0);
-        if (! src_img)
+        ((userdata*)data)->src_path = tinyfd_openFileDialog("Ingrese una imagen","",0,NULL,NULL,0);
+        if (! ((userdata*)data)->src_path)
 	    {
 		    tinyfd_messageBox("Error","Open file name is NULL","ok","error",0);
 	    }
 	    else
 	    {
-            src = cv::imread(src_img,cv::IMREAD_UNCHANGED);
-            newLoad = true;
+            ((userdata*)data)->src = cv::imread(((userdata*)data)->src_path,cv::IMREAD_UNCHANGED);
+            ((userdata*)data)->newLoad = true;
 	    }
     }
 }
 
 //Realiza una apertura y luego un cierre a fin de eliminar imperfecciones
-void procesar(cv::Mat src, cv::Mat dst, cv::Mat kernel)
+void procesar(cv::Mat src, cv::Mat &dst, cv::Mat kernel)
 {
     //Primero vamos a hacer una apertura (erosion y dilatacion)
-    erode(src,result,kernel);
-    dilate(result,result,kernel);
+    erode(src,dst,kernel);
+    dilate(dst,dst,kernel);
     //Luego, un cierre (dilatacion y erocion)
-    dilate(result,result,kernel);
-    erode(result,result,kernel);
+    dilate(dst,dst,kernel);
+    erode(dst,dst,kernel);
 }
 
 //contamos la cantidad de pixeles de algunos colores en la imagen
@@ -84,49 +84,49 @@ void contarPixels(cv::Mat src, int dst[3])
 }
 
 //callbacks de las trackbars
-static void trackbar_kSize( int value, void* )
+static void trackbar_kSize( int value, void* data)
 {
     if(value > 0)
     {
         int kernelSize = 2*floor(value/2)+1; //tiene que ser impar y positivo
         cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT,cv::Size(value,value));
-        procesar(src,result,kernel);
-        contarPixels(result, colores);
-        showImages();
+        procesar(((userdata*)data)->src,((userdata*)data)->result,kernel);
+        contarPixels(((userdata*)data)->result, ((userdata*)data)->colores);
+        //cv::imshow("src",((userdata*)data)->src);
+        //cv::imshow("result",((userdata*)data)->result);
     }
 }
-static void trackbar_pixPerCookie( int value, void* userdata)
+static void trackbar_pixPerCookie( int value, void* data)
 {
     if(value > 0)
     {
         //pixPerCookie
-        *((int*)(userdata)) = value;
+        *((int*)(data)) = value;
     }
-
 }
 
 int main(int argc, char * argv[])
 {
-    userdata Data = userdata();
+    userdata data = userdata();
     //creamos la ventana de las trackbars y el boton de carga
     cv::namedWindow("trackbars", cv::WINDOW_FREERATIO);   
     
     //creamos el boton de carga
     cv::Mat button;
     button = cv::imread("../res/btn_load.png",cv::IMREAD_UNCHANGED);
-    cv::setMouseCallback("trackbars",btn_callback);
+    cv::setMouseCallback("trackbars",btn_callback,&data);
     cv::imshow("trackbars",button);
     
-    while(!src_img)
+    while(!data.src_path)
     {
         cv::waitKey(200);
     }
 
     //agregamos las trackbars
-    int kSize = 5;
+    int kSize = 1;
     int kSizeSlider = kSize;
     const int kSizeSliderMax = 99;
-    cv::createTrackbar( "kSize", "trackbars", &kSizeSlider, kSizeSliderMax, trackbar_kSize);
+    cv::createTrackbar( "kSize", "trackbars", &kSizeSlider, kSizeSliderMax, trackbar_kSize,  &data);
 
     int pixPerCookie = 30000;
     int pixPerCookieSlider = pixPerCookie;
@@ -139,27 +139,29 @@ int main(int argc, char * argv[])
 
     //Procesamos la imagen utilizando transformaciones morfologicas
     cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT,cv::Size(kSize,kSize));
-    procesar(src,result,kernel);
+    procesar(data.src,data.result,kernel);
 
     //contamos los pixeles de color en la imagen
-    contarPixels(result, colores);
+    contarPixels(data.result, data.colores);
 
-    showImages();
+    //showImages();
     //continuamos la ejecucion hasta que se ingrese 'q'
     std::cout << "Ingrese 'q' para terminar." << std::endl;
     bool done = false;
     std::thread t2(checkDone, &done);
     while(!done)
     {
-        if(newLoad)
+        if(data.newLoad)
         {
-            showImages();
-            newLoad = false;
+            cv::imshow("src",data.src);
+            cv::imshow("result",data.result);
+            data.newLoad = false;
         }
-        std::cout << "Rojo: " << colores[0]/pixPerCookie << std::endl;
-        std::cout << "Naranja: " << colores[1]/pixPerCookie << std::endl;
-        std::cout << "Amarillo: " << colores[2]/pixPerCookie << std::endl;
-
+        std::cout << "Rojo: " << data.colores[0]/pixPerCookie << std::endl;
+        std::cout << "Naranja: " << data.colores[1]/pixPerCookie << std::endl;
+        std::cout << "Amarillo: " << data.colores[2]/pixPerCookie << std::endl;
+        cv::imshow("src",data.src);
+        cv::imshow("result",data.result);
         cv::waitKey(200);
         //checkeamos si se cierra la ventana de las trackbars
         try
@@ -172,8 +174,6 @@ int main(int argc, char * argv[])
             cv::destroyAllWindows();
             return 0;
         }
-        
-
     }
     t2.join();
     cv::destroyAllWindows();
