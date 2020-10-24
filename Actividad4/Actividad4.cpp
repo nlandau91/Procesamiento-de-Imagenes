@@ -13,12 +13,18 @@ typedef struct userdata
     int colores[3] = {0};
 } userdata;
 
+//Realiza una apertura y luego un cierre a fin de eliminar imperfecciones
+void procesar(cv::Mat src, cv::Mat &dst, cv::Mat kernel);
+
+//contamos la cantidad de pixeles de algunos colores en la imagen
+void contarPixels(cv::Mat src, int dst[3]);
+
 //paramos cuando se ingresa q
 //lo hacemos en un thread para no bloquear la ejecucion
 void checkDone(bool * done)
 {
     char c = 0;
-    while(!done)
+    while(!(*done))
     {
         *done = 'q' == (c = std::cin.get());
     }
@@ -39,6 +45,26 @@ void btn_callback(int event, int x, int y, int flags, void* data)
             ((userdata*)data)->src = cv::imread(((userdata*)data)->src_path,cv::IMREAD_UNCHANGED);
             ((userdata*)data)->newLoad = true;
 	    }
+    }
+}
+
+//callbacks de las trackbars
+static void trackbar_kSize( int value, void* data)
+{
+    if(value > 0)
+    {
+        int kernelSize = 2*floor(value/2)+1; //tiene que ser impar y positivo
+        cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT,cv::Size(value,value));
+        procesar(((userdata*)data)->src,((userdata*)data)->result,kernel);
+        contarPixels(((userdata*)data)->result, ((userdata*)data)->colores);
+    }
+}
+static void trackbar_pixPerCookie( int value, void* data)
+{
+    if(value > 0)
+    {
+        //pixPerCookie
+        *((int*)(data)) = value;
     }
 }
 
@@ -83,28 +109,6 @@ void contarPixels(cv::Mat src, int dst[3])
 	dst[2] = cv::countNonZero(en_rango_amarillo);
 }
 
-//callbacks de las trackbars
-static void trackbar_kSize( int value, void* data)
-{
-    if(value > 0)
-    {
-        int kernelSize = 2*floor(value/2)+1; //tiene que ser impar y positivo
-        cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT,cv::Size(value,value));
-        procesar(((userdata*)data)->src,((userdata*)data)->result,kernel);
-        contarPixels(((userdata*)data)->result, ((userdata*)data)->colores);
-        //cv::imshow("src",((userdata*)data)->src);
-        //cv::imshow("result",((userdata*)data)->result);
-    }
-}
-static void trackbar_pixPerCookie( int value, void* data)
-{
-    if(value > 0)
-    {
-        //pixPerCookie
-        *((int*)(data)) = value;
-    }
-}
-
 int main(int argc, char * argv[])
 {
     userdata data = userdata();
@@ -144,7 +148,6 @@ int main(int argc, char * argv[])
     //contamos los pixeles de color en la imagen
     contarPixels(data.result, data.colores);
 
-    //showImages();
     //continuamos la ejecucion hasta que se ingrese 'q'
     std::cout << "Ingrese 'q' para terminar." << std::endl;
     bool done = false;
@@ -160,6 +163,7 @@ int main(int argc, char * argv[])
         std::cout << "Rojo: " << data.colores[0]/pixPerCookie << std::endl;
         std::cout << "Naranja: " << data.colores[1]/pixPerCookie << std::endl;
         std::cout << "Amarillo: " << data.colores[2]/pixPerCookie << std::endl;
+        std::cout << "Ingrese 'q' para terminar." << std::endl;
         cv::imshow("src",data.src);
         cv::imshow("result",data.result);
         cv::waitKey(200);
@@ -167,14 +171,18 @@ int main(int argc, char * argv[])
         try
         {
             cv::Rect rect = cv::getWindowImageRect("trackbars");
+            rect = cv::getWindowImageRect("src");
+            rect = cv::getWindowImageRect("result");
         } catch ( cv::Exception e )
         {
             done == true;
-            t2.join();
+            t2.detach();
+            t2.~thread();
             cv::destroyAllWindows();
             return 0;
         }
     }
     t2.join();
     cv::destroyAllWindows();
+    
 }
