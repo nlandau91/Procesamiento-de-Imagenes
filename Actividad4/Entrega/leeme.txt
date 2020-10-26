@@ -1,0 +1,5 @@
+Para generar el binario simplemente utilizar el makefile:
+    $ make
+Para ejecutar:
+    $ ./Actividad4
+Por defecto se carga la imagen "img.png" ubicada en la misma carpeta que el binario, si no se encuentra se abre una ventana de dialogo para abrir un archivo.
