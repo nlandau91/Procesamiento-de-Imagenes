@@ -8,8 +8,7 @@ typedef struct userdata
 {
     cv::Mat src;
     cv::Mat result;
-    char const * src_path = NULL;
-    bool newLoad = false;
+    char const *src_path = NULL;
     int colores[3] = {0};
 } userdata;
 
@@ -21,50 +20,32 @@ void contarPixels(cv::Mat src, int dst[3]);
 
 //paramos cuando se ingresa q
 //lo hacemos en un thread para no bloquear la ejecucion
-void checkDone(bool * done)
+void checkDone(bool *done)
 {
     char c = 0;
-    while(!(*done))
+    while (!(*done))
     {
         *done = 'q' == (c = std::cin.get());
     }
 }
 
-//callback del boton de carga
-void btn_callback(int event, int x, int y, int flags, void* data)
-{
-    if(event == cv::EVENT_LBUTTONDOWN)
-    {
-        ((userdata*)data)->src_path = tinyfd_openFileDialog("Ingrese una imagen","",0,NULL,NULL,0);
-        if (! ((userdata*)data)->src_path)
-	    {
-		    tinyfd_messageBox("Error","Open file name is NULL","ok","error",0);
-	    }
-	    else
-	    {
-            ((userdata*)data)->src = cv::imread(((userdata*)data)->src_path,cv::IMREAD_UNCHANGED);
-            ((userdata*)data)->newLoad = true;
-	    }
-    }
-}
-
 //callbacks de las trackbars
-static void trackbar_kSize( int value, void* data)
+static void trackbar_kSize(int value, void *data)
 {
-    if(value > 0)
+    if (value > 0)
     {
-        int kernelSize = 2*floor(value/2)+1; //tiene que ser impar y positivo
-        cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT,cv::Size(value,value));
-        procesar(((userdata*)data)->src,((userdata*)data)->result,kernel);
-        contarPixels(((userdata*)data)->result, ((userdata*)data)->colores);
+        int kernelSize = 2 * floor(value / 2) + 1; //tiene que ser impar y positivo
+        cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(value, value));
+        procesar(((userdata *)data)->src, ((userdata *)data)->result, kernel);
+        contarPixels(((userdata *)data)->result, ((userdata *)data)->colores);
     }
 }
-static void trackbar_pixPerCookie( int value, void* data)
+static void trackbar_pixPerCookie(int value, void *data)
 {
-    if(value > 0)
+    if (value > 0)
     {
         //pixPerCookie
-        *((int*)(data)) = value;
+        *((int *)(data)) = value;
     }
 }
 
@@ -72,78 +53,81 @@ static void trackbar_pixPerCookie( int value, void* data)
 void procesar(cv::Mat src, cv::Mat &dst, cv::Mat kernel)
 {
     //Primero vamos a hacer una apertura (erosion y dilatacion)
-    erode(src,dst,kernel);
-    dilate(dst,dst,kernel);
+    erode(src, dst, kernel);
+    dilate(dst, dst, kernel);
     //Luego, un cierre (dilatacion y erocion)
-    dilate(dst,dst,kernel);
-    erode(dst,dst,kernel);
+    dilate(dst, dst, kernel);
+    erode(dst, dst, kernel);
 }
 
 //contamos la cantidad de pixeles de algunos colores en la imagen
 void contarPixels(cv::Mat src, int dst[3])
 {
     //la convertimos a hsv, ya que es mas facil diferenciar colores
-	cv::Mat img_hsv;
-	cv::cvtColor(src, img_hsv, cv::COLOR_BGR2HSV);
+    cv::Mat img_hsv;
+    cv::cvtColor(src, img_hsv, cv::COLOR_BGR2HSV);
 
-	//establecemos los rangos para cada color, dividimos por dos porque el rango va de 0 a 180, no a 360, restamos 1  en el tope superior porque los rangos son cerrados
-	int low_H_rojo1 = 0 / 2, high_H_rojo1 = 15 / 2 - 1;
-	int low_H_naranja = 25 / 2, high_H_naranja = 36 / 2 - 1;
-	int low_H_amarillo = 39 / 2, high_H_amarillo = 55 / 2 - 1;
-	int low_H_rojo2 = 355 / 2, high_H_rojo2 = 360 / 2 - 1;
+    //establecemos los rangos para cada color, dividimos por dos porque el rango va de 0 a 180, no a 360, restamos 1  en el tope superior porque los rangos son cerrados
+    int low_H_rojo1 = 0 / 2, high_H_rojo1 = 15 / 2 - 1;
+    int low_H_naranja = 28 / 2, high_H_naranja = 36 / 2 - 1;
+    int low_H_amarillo = 39 / 2, high_H_amarillo = 55 / 2 - 1;
+    int low_H_rojo2 = 355 / 2, high_H_rojo2 = 360 / 2 - 1;
 
-	//establecemos los rangos para el s y el v, esto nos sirve para que los blancos y negros no sean confundidos con algun color
-	int low_S = 100, high_S = 200;
-	int low_V = 100, high_V = 200;
+    //establecemos los rangos para el s y el v, esto nos sirve para que los blancos y negros no sean confundidos con algun color
+    int low_S = 100, high_S = 220;
+    int low_V = 100, high_V = 220;
 
-	//Para cada rango, obtenemos una imagen con solamente los pixels que se encuentran en ese rango
-	cv::Mat en_rango_rojo1, en_rango_naranja, en_rango_amarillo, en_rango_rojo2;
-	cv::inRange(img_hsv, cv::Scalar(low_H_rojo1, 40, low_V), cv::Scalar(high_H_rojo1, high_S, high_V), en_rango_rojo1);
-	cv::inRange(img_hsv, cv::Scalar(low_H_naranja, low_S, low_V), cv::Scalar(high_H_naranja, high_S, high_V), en_rango_naranja);
-	cv::inRange(img_hsv, cv::Scalar(low_H_amarillo, low_S, low_V), cv::Scalar(high_H_amarillo, high_S, high_V), en_rango_amarillo);
-	cv::inRange(img_hsv, cv::Scalar(low_H_rojo2, 40, low_V), cv::Scalar(high_H_rojo2, high_S, high_V), en_rango_rojo2);
+    //Para cada rango, obtenemos una imagen con solamente los pixels que se encuentran en ese rango
+    cv::Mat en_rango_rojo1, en_rango_rojo2, en_rango_rojo, en_rango_naranja, en_rango_amarillo;
+    cv::inRange(img_hsv, cv::Scalar(low_H_rojo1, 40, low_V), cv::Scalar(high_H_rojo1, high_S, high_V), en_rango_rojo1);
+    cv::inRange(img_hsv, cv::Scalar(low_H_rojo2, 40, low_V), cv::Scalar(high_H_rojo2, high_S, high_V), en_rango_rojo2);
+    cv::bitwise_or(en_rango_rojo1,en_rango_rojo2,en_rango_rojo);
+    cv::imshow("en_rango_rojo",en_rango_rojo);
+    cv::inRange(img_hsv, cv::Scalar(low_H_naranja, low_S, low_V), cv::Scalar(high_H_naranja, high_S, high_V), en_rango_naranja);
+    cv::imshow("en_rango_naranja",en_rango_naranja);
+    cv::inRange(img_hsv, cv::Scalar(low_H_amarillo, low_S, low_V), cv::Scalar(high_H_amarillo, high_S, high_V), en_rango_amarillo);
+    cv::imshow("en_rango_amarillo",en_rango_amarillo);
 
-	//obtenemos la cantidad de pixeles que se encuentran dentro de cada rango
-	dst[0] = cv::countNonZero(en_rango_rojo1) + countNonZero(en_rango_rojo2);
-	dst[1] = cv::countNonZero(en_rango_naranja);
-	dst[2] = cv::countNonZero(en_rango_amarillo);
+    //obtenemos la cantidad de pixeles que se encuentran dentro de cada rango
+    dst[0] = cv::countNonZero(en_rango_rojo);
+    dst[1] = cv::countNonZero(en_rango_naranja);
+    dst[2] = cv::countNonZero(en_rango_amarillo);
 }
 
-int main(int argc, char * argv[])
+int main(int argc, char *argv[])
 {
     userdata data = userdata();
-    //creamos la ventana de las trackbars y el boton de carga
-    cv::namedWindow("trackbars", cv::WINDOW_FREERATIO);   
-    
-    //creamos el boton de carga
-    cv::Mat button;
-    button = cv::imread("../res/btn_load.png",cv::IMREAD_UNCHANGED);
-    cv::setMouseCallback("trackbars",btn_callback,&data);
-    cv::imshow("trackbars",button);
-    
-    while(!data.src_path)
+    //creamos la ventana
+    cv::namedWindow("Actividad4", cv::WINDOW_AUTOSIZE);
+
+    //cargamos la imagen
+    while (!data.src_path)
     {
-        cv::waitKey(200);
+        data.src_path = tinyfd_openFileDialog("Ingrese una imagen", "", 0, NULL, NULL, 0);
+        if (!data.src_path)
+        {
+            tinyfd_messageBox("Error", "Open file name is NULL", "ok", "error", 0);
+        }
+        else
+        {
+                data.src = cv::imread(data.src_path,cv::IMREAD_UNCHANGED);
+        }
     }
 
     //agregamos las trackbars
     int kSize = 1;
     int kSizeSlider = kSize;
     const int kSizeSliderMax = 99;
-    cv::createTrackbar( "kSize", "trackbars", &kSizeSlider, kSizeSliderMax, trackbar_kSize,  &data);
+    cv::createTrackbar("kSize", "Actividad4", &kSizeSlider, kSizeSliderMax, trackbar_kSize, &data);
 
     int pixPerCookie = 30000;
     int pixPerCookieSlider = pixPerCookie;
     const int pixPerCookieSliderMax = 300000;
-    cv::createTrackbar( "pixPerCookie", "trackbars", &pixPerCookieSlider, pixPerCookieSliderMax,trackbar_pixPerCookie, &pixPerCookie);
-   
-    //creamos las ventanas de las imagenes
-    cv::namedWindow("src",cv::WINDOW_NORMAL);
-    cv::namedWindow("result",cv::WINDOW_NORMAL);
+    cv::createTrackbar("pixPerCookie", "Actividad4", &pixPerCookieSlider, pixPerCookieSliderMax, trackbar_pixPerCookie, &pixPerCookie);
 
     //Procesamos la imagen utilizando transformaciones morfologicas
-    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT,cv::Size(kSize,kSize));
-    procesar(data.src,data.result,kernel);
+    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(kSize, kSize));
+    procesar(data.src, data.result, kernel);
 
     //contamos los pixeles de color en la imagen
     contarPixels(data.result, data.colores);
@@ -152,28 +136,22 @@ int main(int argc, char * argv[])
     std::cout << "Ingrese 'q' para terminar." << std::endl;
     bool done = false;
     std::thread t2(checkDone, &done);
-    while(!done)
+    while (!done)
     {
-        if(data.newLoad)
-        {
-            cv::imshow("src",data.src);
-            cv::imshow("result",data.result);
-            data.newLoad = false;
-        }
-        std::cout << "Rojo: " << data.colores[0]/pixPerCookie << std::endl;
-        std::cout << "Naranja: " << data.colores[1]/pixPerCookie << std::endl;
-        std::cout << "Amarillo: " << data.colores[2]/pixPerCookie << std::endl;
+        //imprimimos cuantas galletas de cada color hay en la imagen
+        //a partir de los pixeles de color contados y de la cantidad de pixeles de una galleta
+        std::cout << "Rojo: " << data.colores[0] / pixPerCookie << std::endl;
+        std::cout << "Naranja: " << data.colores[1] / pixPerCookie << std::endl;
+        std::cout << "Amarillo: " << data.colores[2] / pixPerCookie << std::endl;
         std::cout << "Ingrese 'q' para terminar." << std::endl;
-        cv::imshow("src",data.src);
-        cv::imshow("result",data.result);
+        cv::imshow("Actividad4", data.result);
         cv::waitKey(200);
-        //checkeamos si se cierra la ventana de las trackbars
+        //checkeamos si se cierra la ventana
         try
         {
-            cv::Rect rect = cv::getWindowImageRect("trackbars");
-            rect = cv::getWindowImageRect("src");
-            rect = cv::getWindowImageRect("result");
-        } catch ( cv::Exception e )
+            cv::Rect rect = cv::getWindowImageRect("Actividad4");
+        }
+        catch (cv::Exception e)
         {
             done == true;
             t2.detach();
@@ -184,5 +162,4 @@ int main(int argc, char * argv[])
     }
     t2.join();
     cv::destroyAllWindows();
-    
 }
