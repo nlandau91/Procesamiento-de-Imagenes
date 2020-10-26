@@ -2,19 +2,23 @@
 #include <opencv2/opencv.hpp>
 
 #include <QApplication>
+#include <QTimer>
+#include <QDebug>
 
 //usamos este struct para pasar variables entre metodos sin utilizar variables globales
-typedef struct userdata
+typedef struct Userdata
 {
     cv::Mat src;
     cv::Mat result;
     char const *src_path = NULL;
     cv::Mat kernel;
+    int kSize = 1;
     int colores[3] = {0};
     cv::Mat thresholds[3];
     int pixPerCookie = 0;
     bool changes = false;
-} userdata;
+    MainWindow w;
+} Userdata;
 
 //Realiza una apertura y luego un cierre a fin de eliminar imperfecciones
 void procesar(cv::Mat src, cv::Mat &dst, cv::Mat kernel);
@@ -71,55 +75,46 @@ void contarPixels(cv::Mat src, int dst_colores[3], cv::Mat dst_thresholds[3])
     dst_thresholds[2] = en_rango_amarillo;
 }
 
+QImage Mat2QImage(cv::Mat const& src)
+{
+     cv::Mat temp; // make the same cv::Mat
+     cv::cvtColor(src, temp,cv::COLOR_BGR2RGB); // cvtColor Makes a copt, that what i need
+     QImage dest((const uchar *) temp.data, temp.cols, temp.rows, temp.step, QImage::Format_RGB888);
+     dest.bits(); // enforce deep copy, see documentation
+     // of QImage::QImage ( const uchar * data, int width, int height, Format format )
+     return dest;
+}
+
+void work(Userdata &data, MainWindow &w)
+{
+    std::cout<< data.kSize << std::endl;
+    data.kernel = cv::getStructuringElement(cv::MORPH_RECT,cv::Size(data.kSize,data.kSize));
+    procesar(data.src,data.result,data.kernel);
+    w.set_amarillo_qimage(Mat2QImage(data.result));
+    if(data.kSize < 100)
+    {
+        data.kSize += 2;
+    }
+}
+
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     MainWindow w;
+    w.show();
 
-    userdata data = userdata();
-    data.pixPerCookie = 30000;
-    int kSize = 3;
-    data.kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(kSize,kSize));
-
-    //intentamos cargar la imagen img.png por defecto
-    data.src = cv::imread("img.png",cv::IMREAD_UNCHANGED);
-    //no se encontro la imagen, abrimos un dialogo para buscar una imagen
+    Userdata data;
+    data.src_path = "img.png";
+    data.src = cv::imread(data.src_path,cv::IMREAD_UNCHANGED);
     if(data.src.empty())
     {
-        std::cout << "Error al cargar la imagen" << std::endl;
+        std::cout << "No se pudo cargar la imagen en " << data.src_path << std::endl;
         return 0;
     }
-    procesar(data.src,data.result,data.kernel);
-    //contamos los pixeles de color en la imagen
-    contarPixels(data.result, data.colores, data.thresholds);
+    QTimer timer;
+        QObject::connect(&timer, &QTimer::timeout, [&data, &w]() { work(data, w); });
+        timer.start(500);
 
-    data.changes = true;
-
-    //continuamos la ejecucion hasta que se ingrese 'q'
-    std::cout << "Ingrese 'q' para terminar." << std::endl;
-    bool done = false;
-    while (!done)
-    {
-        if(data.changes)
-        {
-            //procesamos la imagen y calculamos los colores nuevamente
-            procesar(data.src,data.result,data.kernel);
-            contarPixels(data.result,data.colores,data.thresholds);
-
-            //imprimimos cuantas galletas de cada color hay en la imagen
-            //a partir de los pixeles de color contados y de la cantidad de pixeles de una galleta
-            std::cout << "Rojo: " << data.colores[0] / data.pixPerCookie << std::endl;
-            std::cout << "Naranja: " << data.colores[1] / data.pixPerCookie << std::endl;
-            std::cout << "Amarillo: " << data.colores[2] / data.pixPerCookie << std::endl;
-            std::cout << "Ingrese 'q' para terminar." << std::endl;
-            cv::Mat converted;
-            cv::cvtColor(data.result,converted,cv::COLOR_BGR2RGB);
-            w.set_result_pixmap(QPixmap::fromImage(QImage(converted.data, converted.cols, converted.rows, converted.step, QImage::Format_RGB888)));
-            //data.changes = false;
-        }
-        //cv::waitKey(200);
-        w.show();
-    }
 
     return a.exec();
 }
