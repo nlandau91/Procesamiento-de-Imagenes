@@ -9,7 +9,10 @@ typedef struct userdata
     cv::Mat src;
     cv::Mat result;
     char const *src_path = NULL;
+    cv::Mat kernel;
     int colores[3] = {0};
+    int pixPerCookie = 0;
+    bool changes = false;
 } userdata;
 
 //Realiza una apertura y luego un cierre a fin de eliminar imperfecciones
@@ -35,17 +38,16 @@ static void trackbar_kSize(int value, void *data)
     if (value > 0)
     {
         int kernelSize = 2 * floor(value / 2) + 1; //tiene que ser impar y positivo
-        cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(value, value));
-        procesar(((userdata *)data)->src, ((userdata *)data)->result, kernel);
-        contarPixels(((userdata *)data)->result, ((userdata *)data)->colores);
+        ((userdata *)data)->kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(value, value));
+        ((userdata *)data)->changes = true;
     }
 }
 static void trackbar_pixPerCookie(int value, void *data)
 {
     if (value > 0)
     {
-        //pixPerCookie
-        *((int *)(data)) = value;
+        ((userdata *)data)->pixPerCookie = value;
+        ((userdata *)data)->changes = true;
     }
 }
 
@@ -99,19 +101,24 @@ int main(int argc, char *argv[])
     userdata data = userdata();
     //creamos la ventana
     cv::namedWindow("Actividad4", cv::WINDOW_AUTOSIZE);
-
-    //cargamos la imagen
-    while (!data.src_path)
+    //intentamos cargar la imagen img.png por defecto
+    data.src = cv::imread("img.png",cv::IMREAD_UNCHANGED);
+    //no se encontro la imagen, abrimos un dialogo para buscar una imagen
+    if(data.src.empty())
     {
-        data.src_path = tinyfd_openFileDialog("Ingrese una imagen", "", 0, NULL, NULL, 0);
-        if (!data.src_path)
-        {
-            tinyfd_messageBox("Error", "Open file name is NULL", "ok", "error", 0);
-        }
-        else
-        {
-                data.src = cv::imread(data.src_path,cv::IMREAD_UNCHANGED);
-        }
+		//cargamos la imagen
+		while (!data.src_path)
+		{
+			data.src_path = tinyfd_openFileDialog("Ingrese una imagen", "", 0, NULL, NULL, 0);
+			if (!data.src_path)
+			{
+				tinyfd_messageBox("Error", "Open file name is NULL", "ok", "error", 0);
+			}
+			else
+			{
+				data.src = cv::imread(data.src_path,cv::IMREAD_UNCHANGED);
+			}
+		}
     }
 
     //agregamos las trackbars
@@ -120,17 +127,19 @@ int main(int argc, char *argv[])
     const int kSizeSliderMax = 99;
     cv::createTrackbar("kSize", "Actividad4", &kSizeSlider, kSizeSliderMax, trackbar_kSize, &data);
 
-    int pixPerCookie = 30000;
-    int pixPerCookieSlider = pixPerCookie;
+    data.pixPerCookie = 30000;
+    int pixPerCookieSlider = data.pixPerCookie;
     const int pixPerCookieSliderMax = 300000;
-    cv::createTrackbar("pixPerCookie", "Actividad4", &pixPerCookieSlider, pixPerCookieSliderMax, trackbar_pixPerCookie, &pixPerCookie);
+    cv::createTrackbar("pixPerCookie", "Actividad4", &pixPerCookieSlider, pixPerCookieSliderMax, trackbar_pixPerCookie, &data);
 
     //Procesamos la imagen utilizando transformaciones morfologicas
-    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(kSize, kSize));
-    procesar(data.src, data.result, kernel);
+    data.kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(kSize, kSize));
+    procesar(data.src, data.result, data.kernel);
 
     //contamos los pixeles de color en la imagen
     contarPixels(data.result, data.colores);
+
+    data.changes = true;
 
     //continuamos la ejecucion hasta que se ingrese 'q'
     std::cout << "Ingrese 'q' para terminar." << std::endl;
@@ -138,13 +147,21 @@ int main(int argc, char *argv[])
     std::thread t2(checkDone, &done);
     while (!done)
     {
-        //imprimimos cuantas galletas de cada color hay en la imagen
-        //a partir de los pixeles de color contados y de la cantidad de pixeles de una galleta
-        std::cout << "Rojo: " << data.colores[0] / pixPerCookie << std::endl;
-        std::cout << "Naranja: " << data.colores[1] / pixPerCookie << std::endl;
-        std::cout << "Amarillo: " << data.colores[2] / pixPerCookie << std::endl;
-        std::cout << "Ingrese 'q' para terminar." << std::endl;
-        cv::imshow("Actividad4", data.result);
+        if(data.changes)
+        {
+            //procesamos la imagen y calculamos los colores nuevamente
+            procesar(data.src,data.result,data.kernel);
+            contarPixels(data.result,data.colores);
+
+            //imprimimos cuantas galletas de cada color hay en la imagen
+            //a partir de los pixeles de color contados y de la cantidad de pixeles de una galleta
+            std::cout << "Rojo: " << data.colores[0] / data.pixPerCookie << std::endl;
+            std::cout << "Naranja: " << data.colores[1] / data.pixPerCookie << std::endl;
+            std::cout << "Amarillo: " << data.colores[2] / data.pixPerCookie << std::endl;
+            std::cout << "Ingrese 'q' para terminar." << std::endl;
+            cv::imshow("Actividad4", data.result);
+            data.changes = false;
+        }
         cv::waitKey(200);
         //checkeamos si se cierra la ventana
         try
