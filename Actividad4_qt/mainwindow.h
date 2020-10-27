@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include <QLabel>
 
+#include <opencv2/opencv.hpp>
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -15,21 +17,30 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    void funcionActivacionTimer();
-    void set_result_pixmap(QPixmap qpixmap);
-    void set_rojo_pixmap(QPixmap qpixmap);
-    void set_naranja_pixmap(QPixmap qpixmap);
-    void set_amarillo_pixmap(QPixmap qpixmap);
-    void set_result_qimage(QImage qimage);
-    void set_rojo_qimage(QImage qimage);
-    void set_naranja_qimage(QImage qimage);
-    void set_amarillo_qimage(QImage qimage);
+
+private slots:
+    void on_btn_load_clicked();
+
+    void on_radioBtn_result_clicked();
+
+    void on_radioBtn_rojo_clicked();
+
+    void on_radioBtn_naranja_clicked();
+
+    void on_radioBtn_amarillo_clicked();
 
 private:
     Ui::MainWindow *ui;
-    QLabel* img_result;
-    QLabel* img_rojo;
-    QLabel* img_naranja;
-    QLabel* img_amarillo;
+    cv::Mat original;
+    cv::Mat result;
+    cv::Mat rojo;
+    cv::Mat naranja;
+    cv::Mat amarillo;
+    cv::Mat kernel;
+    int pixPerCookie;
+
+
+    void init_values();
+    void update_image(cv::Mat src);
 };
 #endif // MAINWINDOW_H
