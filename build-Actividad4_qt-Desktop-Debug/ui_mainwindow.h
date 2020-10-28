@@ -34,19 +34,23 @@ public:
     QHBoxLayout *horizontalLayout;
     QVBoxLayout *verticalLayout;
     QPushButton *btn_load;
-    QRadioButton *radioBtn_result;
+    QRadioButton *radioBtn_original;
     QRadioButton *radioBtn_rojo;
     QRadioButton *radioBtn_naranja;
     QRadioButton *radioBtn_amarillo;
     QLabel *lbl_img;
     QVBoxLayout *verticalLayout_3;
     QLabel *label_5;
-    QSlider *verticalSlider;
-    QLabel *label_4;
+    QSlider *slider_kSize;
+    QLabel *lbl_kSize;
     QVBoxLayout *verticalLayout_2;
     QLabel *label_2;
-    QSlider *verticalSlider_2;
-    QLabel *label_3;
+    QSlider *slider_pixels;
+    QLabel *lbl_pixels;
+    QHBoxLayout *horizontalLayout_2;
+    QLabel *lbl_cantRojo;
+    QLabel *lbl_cantNaranja;
+    QLabel *lbl_cantAmarillo;
     QMenuBar *menubar;
     QStatusBar *statusbar;
     QToolBar *toolBar;
@@ -76,16 +80,16 @@ public:
 
         verticalLayout->addWidget(btn_load);
 
-        radioBtn_result = new QRadioButton(centralwidget);
-        radioBtn_result->setObjectName(QString::fromUtf8("radioBtn_result"));
-        sizePolicy.setHeightForWidth(radioBtn_result->sizePolicy().hasHeightForWidth());
-        radioBtn_result->setSizePolicy(sizePolicy);
-        radioBtn_result->setChecked(true);
+        radioBtn_original = new QRadioButton(centralwidget);
+        radioBtn_original->setObjectName(QString::fromUtf8("radioBtn_original"));
+        radioBtn_original->setEnabled(false);
+        radioBtn_original->setChecked(true);
 
-        verticalLayout->addWidget(radioBtn_result);
+        verticalLayout->addWidget(radioBtn_original);
 
         radioBtn_rojo = new QRadioButton(centralwidget);
         radioBtn_rojo->setObjectName(QString::fromUtf8("radioBtn_rojo"));
+        radioBtn_rojo->setEnabled(false);
         sizePolicy.setHeightForWidth(radioBtn_rojo->sizePolicy().hasHeightForWidth());
         radioBtn_rojo->setSizePolicy(sizePolicy);
 
@@ -93,6 +97,7 @@ public:
 
         radioBtn_naranja = new QRadioButton(centralwidget);
         radioBtn_naranja->setObjectName(QString::fromUtf8("radioBtn_naranja"));
+        radioBtn_naranja->setEnabled(false);
         sizePolicy.setHeightForWidth(radioBtn_naranja->sizePolicy().hasHeightForWidth());
         radioBtn_naranja->setSizePolicy(sizePolicy);
 
@@ -100,6 +105,7 @@ public:
 
         radioBtn_amarillo = new QRadioButton(centralwidget);
         radioBtn_amarillo->setObjectName(QString::fromUtf8("radioBtn_amarillo"));
+        radioBtn_amarillo->setEnabled(false);
         sizePolicy.setHeightForWidth(radioBtn_amarillo->sizePolicy().hasHeightForWidth());
         radioBtn_amarillo->setSizePolicy(sizePolicy);
 
@@ -125,16 +131,19 @@ public:
 
         verticalLayout_3->addWidget(label_5);
 
-        verticalSlider = new QSlider(centralwidget);
-        verticalSlider->setObjectName(QString::fromUtf8("verticalSlider"));
-        verticalSlider->setOrientation(Qt::Vertical);
+        slider_kSize = new QSlider(centralwidget);
+        slider_kSize->setObjectName(QString::fromUtf8("slider_kSize"));
+        slider_kSize->setEnabled(false);
+        slider_kSize->setMinimum(1);
+        slider_kSize->setValue(1);
+        slider_kSize->setOrientation(Qt::Vertical);
 
-        verticalLayout_3->addWidget(verticalSlider);
+        verticalLayout_3->addWidget(slider_kSize);
 
-        label_4 = new QLabel(centralwidget);
-        label_4->setObjectName(QString::fromUtf8("label_4"));
+        lbl_kSize = new QLabel(centralwidget);
+        lbl_kSize->setObjectName(QString::fromUtf8("lbl_kSize"));
 
-        verticalLayout_3->addWidget(label_4);
+        verticalLayout_3->addWidget(lbl_kSize);
 
 
         horizontalLayout->addLayout(verticalLayout_3);
@@ -146,22 +155,46 @@ public:
 
         verticalLayout_2->addWidget(label_2);
 
-        verticalSlider_2 = new QSlider(centralwidget);
-        verticalSlider_2->setObjectName(QString::fromUtf8("verticalSlider_2"));
-        verticalSlider_2->setOrientation(Qt::Vertical);
+        slider_pixels = new QSlider(centralwidget);
+        slider_pixels->setObjectName(QString::fromUtf8("slider_pixels"));
+        slider_pixels->setEnabled(false);
+        slider_pixels->setMinimum(1);
+        slider_pixels->setMaximum(200000);
+        slider_pixels->setValue(10000);
+        slider_pixels->setOrientation(Qt::Vertical);
 
-        verticalLayout_2->addWidget(verticalSlider_2);
+        verticalLayout_2->addWidget(slider_pixels);
 
-        label_3 = new QLabel(centralwidget);
-        label_3->setObjectName(QString::fromUtf8("label_3"));
+        lbl_pixels = new QLabel(centralwidget);
+        lbl_pixels->setObjectName(QString::fromUtf8("lbl_pixels"));
 
-        verticalLayout_2->addWidget(label_3);
+        verticalLayout_2->addWidget(lbl_pixels);
 
 
         horizontalLayout->addLayout(verticalLayout_2);
 
 
-        gridLayout_2->addLayout(horizontalLayout, 0, 1, 1, 1);
+        gridLayout_2->addLayout(horizontalLayout, 0, 0, 1, 1);
+
+        horizontalLayout_2 = new QHBoxLayout();
+        horizontalLayout_2->setObjectName(QString::fromUtf8("horizontalLayout_2"));
+        lbl_cantRojo = new QLabel(centralwidget);
+        lbl_cantRojo->setObjectName(QString::fromUtf8("lbl_cantRojo"));
+
+        horizontalLayout_2->addWidget(lbl_cantRojo);
+
+        lbl_cantNaranja = new QLabel(centralwidget);
+        lbl_cantNaranja->setObjectName(QString::fromUtf8("lbl_cantNaranja"));
+
+        horizontalLayout_2->addWidget(lbl_cantNaranja);
+
+        lbl_cantAmarillo = new QLabel(centralwidget);
+        lbl_cantAmarillo->setObjectName(QString::fromUtf8("lbl_cantAmarillo"));
+
+        horizontalLayout_2->addWidget(lbl_cantAmarillo);
+
+
+        gridLayout_2->addLayout(horizontalLayout_2, 2, 0, 1, 1);
 
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
@@ -184,15 +217,18 @@ public:
     {
         MainWindow->setWindowTitle(QApplication::translate("MainWindow", "MainWindow", nullptr));
         btn_load->setText(QApplication::translate("MainWindow", "Load", nullptr));
-        radioBtn_result->setText(QApplication::translate("MainWindow", "Result", nullptr));
+        radioBtn_original->setText(QApplication::translate("MainWindow", "Original", nullptr));
         radioBtn_rojo->setText(QApplication::translate("MainWindow", "Rojo", nullptr));
         radioBtn_naranja->setText(QApplication::translate("MainWindow", "Naranja", nullptr));
         radioBtn_amarillo->setText(QApplication::translate("MainWindow", "Amarillo", nullptr));
         lbl_img->setText(QApplication::translate("MainWindow", "lbl_img", nullptr));
         label_5->setText(QApplication::translate("MainWindow", "kSize", nullptr));
-        label_4->setText(QApplication::translate("MainWindow", "TextLabel", nullptr));
+        lbl_kSize->setText(QApplication::translate("MainWindow", "0", nullptr));
         label_2->setText(QApplication::translate("MainWindow", "pixels", nullptr));
-        label_3->setText(QApplication::translate("MainWindow", "TextLabel", nullptr));
+        lbl_pixels->setText(QApplication::translate("MainWindow", "0", nullptr));
+        lbl_cantRojo->setText(QApplication::translate("MainWindow", "Rojo: ", nullptr));
+        lbl_cantNaranja->setText(QApplication::translate("MainWindow", "Naranja:", nullptr));
+        lbl_cantAmarillo->setText(QApplication::translate("MainWindow", "Amarillo:", nullptr));
         toolBar->setWindowTitle(QApplication::translate("MainWindow", "toolBar", nullptr));
     } // retranslateUi
 

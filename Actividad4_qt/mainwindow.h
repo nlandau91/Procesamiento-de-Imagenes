@@ -13,6 +13,13 @@ QT_END_NAMESPACE
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
+enum cvMats{
+    CVMAT_ORIGINAL,
+    CVMAT_ROJO,
+    CVMAT_NARANJA,
+    CVMAT_AMARILLO,
+    CVMAT_ACTUAL
+};
 
 public:
     MainWindow(QWidget *parent = nullptr);
@@ -21,26 +28,30 @@ public:
 private slots:
     void on_btn_load_clicked();
 
-    void on_radioBtn_result_clicked();
-
     void on_radioBtn_rojo_clicked();
 
     void on_radioBtn_naranja_clicked();
 
     void on_radioBtn_amarillo_clicked();
 
+    void on_radioBtn_original_clicked();
+
+    void on_slider_kSize_sliderMoved(int position);
+
+    void on_slider_pixels_sliderMoved(int position);
+
 private:
     Ui::MainWindow *ui;
-    cv::Mat original;
-    cv::Mat result;
-    cv::Mat rojo;
-    cv::Mat naranja;
-    cv::Mat amarillo;
-    cv::Mat kernel;
+    cv::Mat cvMats[7];
     int pixPerCookie;
+    int kSize;
+    int shape;
 
 
     void init_values();
-    void update_image(cv::Mat src);
+    void update_image();
+    void procesar(cv::Mat &src, cv::Mat &dst);
+    void obtener_thresholds(cv::Mat &src);
+    void calcular_cookies();
 };
 #endif // MAINWINDOW_H

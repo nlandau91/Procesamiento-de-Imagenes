@@ -15,7 +15,7 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_2">
-    <item row="0" column="1">
+    <item row="0" column="0">
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
        <layout class="QVBoxLayout" name="verticalLayout">
@@ -42,15 +42,12 @@
          </widget>
         </item>
         <item>
-         <widget class="QRadioButton" name="radioBtn_result">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
+         <widget class="QRadioButton" name="radioBtn_original">
+          <property name="enabled">
+           <bool>false</bool>
           </property>
           <property name="text">
-           <string>Result</string>
+           <string>Original</string>
           </property>
           <property name="checked">
            <bool>true</bool>
@@ -59,6 +56,9 @@
         </item>
         <item>
          <widget class="QRadioButton" name="radioBtn_rojo">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -72,6 +72,9 @@
         </item>
         <item>
          <widget class="QRadioButton" name="radioBtn_naranja">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -85,6 +88,9 @@
         </item>
         <item>
          <widget class="QRadioButton" name="radioBtn_amarillo">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -121,16 +127,25 @@
          </widget>
         </item>
         <item>
-         <widget class="QSlider" name="verticalSlider">
+         <widget class="QSlider" name="slider_kSize">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="minimum">
+           <number>1</number>
+          </property>
+          <property name="value">
+           <number>1</number>
+          </property>
           <property name="orientation">
            <enum>Qt::Vertical</enum>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QLabel" name="label_4">
+         <widget class="QLabel" name="lbl_kSize">
           <property name="text">
-           <string>TextLabel</string>
+           <string>0</string>
           </property>
          </widget>
         </item>
@@ -146,20 +161,57 @@
          </widget>
         </item>
         <item>
-         <widget class="QSlider" name="verticalSlider_2">
+         <widget class="QSlider" name="slider_pixels">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="minimum">
+           <number>1</number>
+          </property>
+          <property name="maximum">
+           <number>200000</number>
+          </property>
+          <property name="value">
+           <number>10000</number>
+          </property>
           <property name="orientation">
            <enum>Qt::Vertical</enum>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QLabel" name="label_3">
+         <widget class="QLabel" name="lbl_pixels">
           <property name="text">
-           <string>TextLabel</string>
+           <string>0</string>
           </property>
          </widget>
         </item>
        </layout>
+      </item>
+     </layout>
+    </item>
+    <item row="2" column="0">
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QLabel" name="lbl_cantRojo">
+        <property name="text">
+         <string>Rojo: </string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="lbl_cantNaranja">
+        <property name="text">
+         <string>Naranja:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="lbl_cantAmarillo">
+        <property name="text">
+         <string>Amarillo:</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </item>
