@@ -75,8 +75,8 @@ void MainWindow::procesar(cv::Mat &src, cv::Mat &dst)
     cv::Mat kernel = cv::getStructuringElement(shape,cv::Size(kSize,kSize));
     cv::erode(src,dst,kernel);
     cv::dilate(dst,dst,kernel);
-    cv::erode(dst,dst,kernel);
     cv::dilate(dst,dst,kernel);
+    cv::erode(dst,dst,kernel);
 }
 
 void MainWindow::obtener_thresholds(cv::Mat &src)

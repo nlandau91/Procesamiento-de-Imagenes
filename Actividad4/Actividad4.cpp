@@ -7,10 +7,9 @@
 typedef struct userdata
 {
     cv::Mat src;
-    cv::Mat result;
     char const *src_path = NULL;
     cv::Mat kernel;
-    int colores[3] = {0};
+    cv::Mat thresholds[3];
     int pixPerCookie = 0;
     bool changes = false;
 } userdata;
@@ -19,7 +18,7 @@ typedef struct userdata
 void procesar(cv::Mat src, cv::Mat &dst, cv::Mat kernel);
 
 //contamos la cantidad de pixeles de algunos colores en la imagen
-void contarPixels(cv::Mat src, int dst[3]);
+void contarPixels(cv::Mat src, cv::Mat dst[3]);
 
 //paramos cuando se ingresa q
 //lo hacemos en un thread para no bloquear la ejecucion
@@ -63,7 +62,7 @@ void procesar(cv::Mat src, cv::Mat &dst, cv::Mat kernel)
 }
 
 //contamos la cantidad de pixeles de algunos colores en la imagen
-void contarPixels(cv::Mat src, int dst[3])
+void obtenerThresholds(cv::Mat src, cv::Mat dst[3])
 {
     //la convertimos a hsv, ya que es mas facil diferenciar colores
     cv::Mat img_hsv;
@@ -84,16 +83,13 @@ void contarPixels(cv::Mat src, int dst[3])
     cv::inRange(img_hsv, cv::Scalar(low_H_rojo1, 40, low_V), cv::Scalar(high_H_rojo1, high_S, high_V), en_rango_rojo1);
     cv::inRange(img_hsv, cv::Scalar(low_H_rojo2, 40, low_V), cv::Scalar(high_H_rojo2, high_S, high_V), en_rango_rojo2);
     cv::bitwise_or(en_rango_rojo1,en_rango_rojo2,en_rango_rojo);
-    cv::imshow("en_rango_rojo",en_rango_rojo);
     cv::inRange(img_hsv, cv::Scalar(low_H_naranja, low_S, low_V), cv::Scalar(high_H_naranja, high_S, high_V), en_rango_naranja);
-    cv::imshow("en_rango_naranja",en_rango_naranja);
     cv::inRange(img_hsv, cv::Scalar(low_H_amarillo, low_S, low_V), cv::Scalar(high_H_amarillo, high_S, high_V), en_rango_amarillo);
-    cv::imshow("en_rango_amarillo",en_rango_amarillo);
 
     //obtenemos la cantidad de pixeles que se encuentran dentro de cada rango
-    dst[0] = cv::countNonZero(en_rango_rojo);
-    dst[1] = cv::countNonZero(en_rango_naranja);
-    dst[2] = cv::countNonZero(en_rango_amarillo);
+    dst[0] = en_rango_rojo;
+    dst[1] = en_rango_naranja;
+    dst[2] = en_rango_amarillo;
 }
 
 int main(int argc, char *argv[])
@@ -132,12 +128,17 @@ int main(int argc, char *argv[])
     const int pixPerCookieSliderMax = 300000;
     cv::createTrackbar("pixPerCookie", "Actividad4", &pixPerCookieSlider, pixPerCookieSliderMax, trackbar_pixPerCookie, &data);
 
-    //Procesamos la imagen utilizando transformaciones morfologicas
+    //calculamos los thresholds
+    obtenerThresholds(data.src, data.thresholds);
+    //Procesamos los thresholds utilizando transformaciones morfologicas
     data.kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(kSize, kSize));
-    procesar(data.src, data.result, data.kernel);
+    procesar(data.thresholds[0],data.thresholds[0],data.kernel);
+    procesar(data.thresholds[1],data.thresholds[1],data.kernel);
+    procesar(data.thresholds[2],data.thresholds[2],data.kernel);
 
-    //contamos los pixeles de color en la imagen
-    contarPixels(data.result, data.colores);
+
+    //mostramos la imagen original
+    cv::imshow("Actividad4",data.src);
 
     data.changes = true;
 
@@ -150,16 +151,20 @@ int main(int argc, char *argv[])
         if(data.changes)
         {
             //procesamos la imagen y calculamos los colores nuevamente
-            procesar(data.src,data.result,data.kernel);
-            contarPixels(data.result,data.colores);
+            obtenerThresholds(data.src,data.thresholds);
+            procesar(data.thresholds[0],data.thresholds[0],data.kernel);
+            procesar(data.thresholds[1],data.thresholds[1],data.kernel);
+            procesar(data.thresholds[2],data.thresholds[2],data.kernel);
 
             //imprimimos cuantas galletas de cada color hay en la imagen
             //a partir de los pixeles de color contados y de la cantidad de pixeles de una galleta
-            std::cout << "Rojo: " << data.colores[0] / data.pixPerCookie << std::endl;
-            std::cout << "Naranja: " << data.colores[1] / data.pixPerCookie << std::endl;
-            std::cout << "Amarillo: " << data.colores[2] / data.pixPerCookie << std::endl;
+            std::cout << "Rojo: " << cv::countNonZero(data.thresholds[0]) / data.pixPerCookie << std::endl;
+            std::cout << "Naranja: " << cv::countNonZero(data.thresholds[1]) / data.pixPerCookie << std::endl;
+            std::cout << "Amarillo: " << cv::countNonZero(data.thresholds[2]) / data.pixPerCookie << std::endl;
             std::cout << "Ingrese 'q' para terminar." << std::endl;
-            cv::imshow("Actividad4", data.result);
+            cv::imshow("Rojo", data.thresholds[0]);
+            cv::imshow("Naranja", data.thresholds[1]);
+            cv::imshow("Amarillo", data.thresholds[2]);
             data.changes = false;
         }
         cv::waitKey(200);
