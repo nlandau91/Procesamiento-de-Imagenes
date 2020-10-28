@@ -1,5 +1,22 @@
+Hay dos versiones del programa:
+-una utiliza las herramientas de GUI de opencv4
+-la otra utiliza Qt
+
+Para la version con la GUI de opencv:
+Entrar en la carpeta Actividad4
+    $ cd Actividad4
 Para generar el binario simplemente utilizar el makefile:
     $ make
 Para ejecutar:
     $ ./Actividad4
 Por defecto se carga la imagen "img.png" ubicada en la misma carpeta que el binario, si no se encuentra se abre una ventana de dialogo para abrir un archivo.
+
+Para la version Qt:
+Entrar en la carpeta Actividad4_qt
+    $ cd Actividad4_qt
+Generar el make utilizando qmake
+    $ qmake
+Generar el binario a partir del makefile
+    $ makefile
+Ejecutar
+    $ ./Actividad4_qt
