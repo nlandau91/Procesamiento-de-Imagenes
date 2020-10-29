@@ -36,15 +36,22 @@ private slots:
 
     void on_radioBtn_original_clicked();
 
-    void on_slider_kSize_sliderMoved(int position);
+    void on_slider_kSize1_sliderMoved(int position);
 
     void on_slider_pixels_sliderMoved(int position);
+
+    void on_slider_kSize2_sliderMoved(int position);
+
+    ;
+
+    void on_comboBox_currentIndexChanged(const QString &arg1);
 
 private:
     Ui::MainWindow *ui;
     cv::Mat cvMats[7];
     int pixPerCookie;
-    int kSize;
+    int kSize1;
+    int kSize2;
     int shape;
 
 

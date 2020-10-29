@@ -115,39 +115,92 @@
         <property name="text">
          <string>lbl_img</string>
         </property>
+        <property name="scaledContents">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <item>
-         <widget class="QLabel" name="label_5">
+         <widget class="QLabel" name="lbl_elemEstr">
           <property name="text">
-           <string>kSize</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Elemento&lt;/p&gt;&lt;p&gt;Estructural&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QSlider" name="slider_kSize">
+         <widget class="QComboBox" name="comboBox">
           <property name="enabled">
            <bool>false</bool>
           </property>
-          <property name="minimum">
-           <number>1</number>
-          </property>
-          <property name="value">
-           <number>1</number>
-          </property>
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
+          <item>
+           <property name="text">
+            <string>Rectangulo</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Cruz</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Elipse</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_5">
+          <property name="text">
+           <string>kernel sizes</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QLabel" name="lbl_kSize">
-          <property name="text">
-           <string>0</string>
-          </property>
-         </widget>
+         <layout class="QGridLayout" name="gridLayout_3">
+          <item row="0" column="1">
+           <widget class="QSlider" name="slider_kSize2">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QSlider" name="slider_kSize1">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="lbl_kSize1">
+            <property name="text">
+             <string>0</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLabel" name="lbl_kSize2">
+            <property name="text">
+             <string>0</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </item>
@@ -193,6 +246,13 @@
     <item row="2" column="0">
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Galletas detectadas:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QLabel" name="lbl_cantRojo">
         <property name="text">
          <string>Rojo: </string>
@@ -216,28 +276,6 @@
      </layout>
     </item>
    </layout>
-  </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>597</width>
-     <height>22</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QStatusBar" name="statusbar"/>
-  <widget class="QToolBar" name="toolBar">
-   <property name="windowTitle">
-    <string>toolBar</string>
-   </property>
-   <attribute name="toolBarArea">
-    <enum>TopToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
   </widget>
  </widget>
  <resources/>

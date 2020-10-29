@@ -53,6 +53,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    //ui->lbl_img->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Ignored);
     init_values();
 }
 
@@ -60,19 +61,24 @@ void MainWindow::init_values()
 {
     pixPerCookie = 10000;
     ui->lbl_pixels->setText(QString::number(pixPerCookie));
-    kSize = 1;
+    kSize1 = 1;
+    kSize2 = 1;
     shape = cv::MORPH_RECT;
-    ui->lbl_kSize->setText(QString::number(kSize));
+    ui->lbl_kSize1->setText(QString::number(kSize1));
+    ui->lbl_kSize2->setText(QString::number(kSize2));
 }
 
 void MainWindow::update_image()
 {
+    //int w =  ui->lbl_img->width();
+    //int h =  ui->lbl_img->height();
+    //ui->lbl_img->setPixmap(cvMatToQPixmap(cvMats[CVMAT_ACTUAL]).scaled(w,h,Qt::KeepAspectRatio));
     ui->lbl_img->setPixmap(cvMatToQPixmap(cvMats[CVMAT_ACTUAL]));
 }
 
 void MainWindow::procesar(cv::Mat &src, cv::Mat &dst)
 {
-    cv::Mat kernel = cv::getStructuringElement(shape,cv::Size(kSize,kSize));
+    cv::Mat kernel = cv::getStructuringElement(shape,cv::Size(kSize1,kSize2));
     cv::erode(src,dst,kernel);
     cv::dilate(dst,dst,kernel);
     cv::dilate(dst,dst,kernel);
@@ -86,14 +92,14 @@ void MainWindow::obtener_thresholds(cv::Mat &src)
     cv::cvtColor(src,img_hsv,cv::COLOR_BGR2HSV);
 
     //establecemos los rangos para cada color, dividimos por dos porque el rango va de 0 a 180, no a 360, restamos 1  en el tope superior porque los rangos son cerrados
-    int low_H_rojo1 = 0 / 2, high_H_rojo1 = 15 / 2 - 1;
-    int low_H_naranja = 28 / 2, high_H_naranja = 36 / 2 - 1;
+    int low_H_rojo1 = 0 / 2, high_H_rojo1 = 16 / 2 - 1;
+    int low_H_naranja = 29 / 2, high_H_naranja = 36 / 2 - 1;
     int low_H_amarillo = 39 / 2, high_H_amarillo = 55 / 2 - 1;
     int low_H_rojo2 = 355 / 2, high_H_rojo2 = 360 / 2 - 1;
 
     //establecemos los rangos para el s y el v, esto nos sirve para que los blancos y negros no sean confundidos con algun color
-    int low_S = 100, high_S = 220;
-    int low_V = 100, high_V = 220;
+    int low_S = 70, high_S = 220;
+    int low_V = 70, high_V = 220;
 
     //Para cada rango, obtenemos una imagen con solamente los pixels que se encuentran en ese rango
     cv::Mat en_rango_rojo1, en_rango_rojo2;
@@ -138,9 +144,11 @@ void MainWindow::on_btn_load_clicked()
     ui->radioBtn_rojo->setEnabled(true);
     ui->radioBtn_naranja->setEnabled(true);
     ui->radioBtn_amarillo->setEnabled(true);
-    ui->slider_kSize->setEnabled(true);
+    ui->slider_kSize1->setEnabled(true);
+    ui->slider_kSize2->setEnabled(true);
     ui->slider_pixels->setEnabled(true);
     ui->btn_load->setEnabled(false);
+    ui->comboBox->setEnabled(true);
 }
 
 void MainWindow::on_radioBtn_rojo_clicked()
@@ -167,12 +175,12 @@ void MainWindow::on_radioBtn_original_clicked()
     update_image();
 }
 
-void MainWindow::on_slider_kSize_sliderMoved(int position)
+void MainWindow::on_slider_kSize1_sliderMoved(int position)
 {
     if(position % 2 == 1)
     {
-        kSize = position;
-        ui->lbl_kSize->setText(QString::number(position));
+        kSize1 = position;
+        ui->lbl_kSize1->setText(QString::number(position));
         obtener_thresholds(cvMats[CVMAT_ORIGINAL]);
         procesar(cvMats[CVMAT_ROJO],cvMats[CVMAT_ROJO]);
         procesar(cvMats[CVMAT_NARANJA],cvMats[CVMAT_NARANJA]);
@@ -187,4 +195,43 @@ void MainWindow::on_slider_pixels_sliderMoved(int position)
     pixPerCookie = position;
     calcular_cookies();
     ui->lbl_pixels->setText(QString::number(position));
+}
+
+void MainWindow::on_slider_kSize2_sliderMoved(int position)
+{
+    if(position % 2 == 1)
+    {
+        kSize2 = position;
+        ui->lbl_kSize2->setText(QString::number(position));
+        obtener_thresholds(cvMats[CVMAT_ORIGINAL]);
+        procesar(cvMats[CVMAT_ROJO],cvMats[CVMAT_ROJO]);
+        procesar(cvMats[CVMAT_NARANJA],cvMats[CVMAT_NARANJA]);
+        procesar(cvMats[CVMAT_AMARILLO],cvMats[CVMAT_AMARILLO]);
+        calcular_cookies();
+        update_image();
+    }
+}
+
+
+
+void MainWindow::on_comboBox_currentIndexChanged(const QString &arg1)
+{
+    if(arg1 == "Rectangulo")
+    {
+        shape = cv::MORPH_RECT;
+    }
+    if(arg1 == "Cruz")
+    {
+        shape = cv::MORPH_CROSS;
+    }
+    if(arg1 == "Elipse")
+    {
+        shape = cv::MORPH_ELLIPSE;
+    }
+    obtener_thresholds(cvMats[CVMAT_ORIGINAL]);
+    procesar(cvMats[CVMAT_ROJO],cvMats[CVMAT_ROJO]);
+    procesar(cvMats[CVMAT_NARANJA],cvMats[CVMAT_NARANJA]);
+    procesar(cvMats[CVMAT_AMARILLO],cvMats[CVMAT_AMARILLO]);
+    calcular_cookies();
+    update_image();
 }
