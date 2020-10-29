@@ -19,9 +19,6 @@
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
        <layout class="QVBoxLayout" name="verticalLayout">
-        <property name="sizeConstraint">
-         <enum>QLayout::SetDefaultConstraint</enum>
-        </property>
         <item>
          <widget class="QPushButton" name="btn_load">
           <property name="sizePolicy">
@@ -106,12 +103,6 @@
       </item>
       <item>
        <widget class="QLabel" name="lbl_img">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-          <horstretch>1</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
         <property name="text">
          <string>lbl_img</string>
         </property>

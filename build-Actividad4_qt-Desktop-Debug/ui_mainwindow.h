@@ -69,7 +69,6 @@ public:
         horizontalLayout->setObjectName(QString::fromUtf8("horizontalLayout"));
         verticalLayout = new QVBoxLayout();
         verticalLayout->setObjectName(QString::fromUtf8("verticalLayout"));
-        verticalLayout->setSizeConstraint(QLayout::SetDefaultConstraint);
         btn_load = new QPushButton(centralwidget);
         btn_load->setObjectName(QString::fromUtf8("btn_load"));
         QSizePolicy sizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
@@ -117,11 +116,6 @@ public:
 
         lbl_img = new QLabel(centralwidget);
         lbl_img->setObjectName(QString::fromUtf8("lbl_img"));
-        QSizePolicy sizePolicy1(QSizePolicy::Preferred, QSizePolicy::Preferred);
-        sizePolicy1.setHorizontalStretch(1);
-        sizePolicy1.setVerticalStretch(0);
-        sizePolicy1.setHeightForWidth(lbl_img->sizePolicy().hasHeightForWidth());
-        lbl_img->setSizePolicy(sizePolicy1);
         lbl_img->setScaledContents(true);
 
         horizontalLayout->addWidget(lbl_img);

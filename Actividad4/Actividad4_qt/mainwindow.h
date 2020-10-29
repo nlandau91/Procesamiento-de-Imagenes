@@ -60,5 +60,6 @@ private:
     void procesar(cv::Mat &src, cv::Mat &dst);
     void obtener_thresholds(cv::Mat &src);
     void calcular_cookies();
+    void resizeEvent(QResizeEvent* event);
 };
 #endif // MAINWINDOW_H

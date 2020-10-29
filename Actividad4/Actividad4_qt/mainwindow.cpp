@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include <QResizeEvent>
 
 inline QImage  cvMatToQImage( const cv::Mat &inMat )
 {
@@ -70,10 +71,18 @@ void MainWindow::init_values()
 
 void MainWindow::update_image()
 {
-    //int w =  ui->lbl_img->width();
-    //int h =  ui->lbl_img->height();
-    //ui->lbl_img->setPixmap(cvMatToQPixmap(cvMats[CVMAT_ACTUAL]).scaled(w,h,Qt::KeepAspectRatio));
-    ui->lbl_img->setPixmap(cvMatToQPixmap(cvMats[CVMAT_ACTUAL]));
+    int w =  ui->lbl_img->width();
+    int h =  ui->lbl_img->height();
+    ui->lbl_img->setPixmap(cvMatToQPixmap(cvMats[CVMAT_ACTUAL]).scaled(w,h,Qt::KeepAspectRatio));
+    //ui->lbl_img->setPixmap(cvMatToQPixmap(cvMats[CVMAT_ACTUAL]));
+}
+
+void MainWindow::resizeEvent(QResizeEvent *event)
+{
+    //int h = event->size().height();
+    //int w = event->size().width();
+    //std::cout << "h: " << h << "w: " << w <<std::endl;
+    update_image();
 }
 
 void MainWindow::procesar(cv::Mat &src, cv::Mat &dst)
