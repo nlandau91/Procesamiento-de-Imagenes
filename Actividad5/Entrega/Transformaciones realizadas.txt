@@ -1,0 +1,16 @@
+Se realizo una transformacion perspectiva y luego un escalado de la siguiente manera:
+
+Primero se obtuvo una matriz de transformacion perspectiva a partir de 4 pares de puntos (cv::getPerspectiveTransform())
+Los puntos elegidos de la imagen original fueron:
+(86, 120)
+(360, 120)
+(380,540)
+(60,540)
+estos puntos serian transformados a los siguientes respectivamente:
+(86,120)
+(360, 120)
+(360,540)
+(86,540)
+Una vez obtenida la matriz de transformacion, se aplico a la imagen original (cv::warpPerspective().
+
+Luegos se aplico un escalado de 0.5 en el eje y (cv::resize()).
