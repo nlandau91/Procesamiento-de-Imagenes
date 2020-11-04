@@ -60,7 +60,7 @@ main()
 
     //escalamos la imagen
     cv::Mat result;
-    cv::resize(perspective,result,cv::Size(),1.0,0.5);
+    cv::resize(perspective,result,cv::Size(),0.75,0.75);
 
     //mostramos el resultado
     cv::namedWindow("perspective",cv::WINDOW_AUTOSIZE);

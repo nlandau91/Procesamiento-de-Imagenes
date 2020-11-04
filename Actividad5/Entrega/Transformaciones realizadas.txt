@@ -13,4 +13,4 @@ estos puntos serian transformados a los siguientes respectivamente:
 (86,540)
 Una vez obtenida la matriz de transformacion, se aplico a la imagen original (cv::warpPerspective().
 
-Luegos se aplico un escalado de 0.5 en el eje y (cv::resize()).
+Luegos se aplico un escalado de 0.75 en ambos ejes (cv::resize()).
