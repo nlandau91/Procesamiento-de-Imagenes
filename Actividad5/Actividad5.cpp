@@ -25,23 +25,23 @@ void srcPoints(int event, int x, int y, int flags, void* userdata)
 main()
 {   
     //cargamos y mostramos la imagen original
-    std::string src_path = "Hyacinthe_rigaud,_ritratto_di_luigi_xiv_di_francia,_1701,_01.jpg";
+    std::string src_path = "src.jpg";
     cv::Mat src = cv::imread(src_path,cv::IMREAD_UNCHANGED);
     if (src.empty())
     {
         std::cout << "Error loading the image" << std::endl;
         return -1;
     }
-    cv::namedWindow("src",cv::WINDOW_AUTOSIZE);
+    cv::namedWindow("src",cv::WINDOW_FREERATIO);
 
     //esperamos a que el usuario elija los pares de puntos
-    //cv::setMouseCallback("src", srcPoints, NULL);
+    cv::setMouseCallback("src", srcPoints, NULL);
     cv::imshow("src",src);
-    //cv::waitKey(0);
+    cv::waitKey(0);
     
     //hardcodeamos los puntos
-    pointsSrc = { cv::Point2f(86,120), cv::Point2f(360,120), cv::Point2f(380,540), cv::Point2f(60,540) };
-    pointsDst = { cv::Point2f(86,120), cv::Point2f(360,120), cv::Point2f(360,540), cv::Point2f(86,540) };
+    //pointsSrc = { cv::Point2f(86,120), cv::Point2f(360,120), cv::Point2f(380,540), cv::Point2f(60,540) };
+    //pointsDst = { cv::Point2f(86,120), cv::Point2f(360,120), cv::Point2f(360,540), cv::Point2f(86,540) };
 
     std::cout << "Points Src: " << std::endl;
     for (auto& i : pointsSrc) {
@@ -59,18 +59,18 @@ main()
     cv::warpPerspective(src, perspective, perspectiveMatrix, src.size());
 
     //escalamos la imagen
-    cv::Mat result;
-    cv::resize(perspective,result,cv::Size(),0.75,0.75);
+    //cv::Mat result;
+    //cv::resize(perspective,result,cv::Size(),0.75,0.75);
 
     //mostramos el resultado
-    cv::namedWindow("perspective",cv::WINDOW_AUTOSIZE);
+    cv::namedWindow("perspective",cv::WINDOW_FREERATIO);
     cv::imshow("perspective", perspective);
-    cv::namedWindow("result",cv::WINDOW_AUTOSIZE);
-    cv::imshow("result", result);
+    //cv::namedWindow("result",cv::WINDOW_FREERATIO);
+    //cv::imshow("result", result);
     
     //guardamos las imagenes
     cv::imwrite("perspective.jpg",perspective);
-    cv::imwrite("result.jpg", result);
+   // cv::imwrite("result.jpg", result);
     
     cv::waitKey(0);
 }
