@@ -1,18 +1,18 @@
 #OBJS specifies which files to compile as part of the project
-OBJS = main.cpp
+OBJS = Actividad6.cpp ../include/tinyfiledialogs/tinyfiledialogs.c
 
 #CC specifies which compiler we're using
 CC = g++
 
 #COMPILER_FLAGS specifies the additional compilation options we're using
 # -w suppresses all warnings
-COMPILER_FLAGS = -w
+COMPILER_FLAGS = -w -std=c++0x -pthread `pkg-config --cflags opencv4`
 
 #LINKER_FLAGS specifies the libraries we're linking against
-LINKER_FLAGS = -lSDL2 `pkg-config --cflags --libs opencv4`
+LINKER_FLAGS = `pkg-config --libs opencv4`
 
 #OBJ_NAME specifies the name of our exectuable
-OBJ_NAME = main
+OBJ_NAME = Actividad6
 
 #This is the target that compiles our executable
 all : $(OBJS)
