@@ -52,6 +52,16 @@ cv::Mat edgesSobel(cv::Mat &src,int ddepth, int ksize, int scale, int delta)
     return edges;
 }
 
+cv::Mat edgesCanny(cv::Mat &src,double t1, int ratio, int kSize)
+{
+    // Convert the image to grayscale
+    cv::Mat grayscale;
+    cv::cvtColor(src,grayscale,cv::COLOR_BGR2GRAY);
+    cv::Mat edges;
+    cv::Canny(grayscale,edges, t1, t1*ratio, kSize);
+    return edges;
+}
+
 cv::Mat requantize(cv::Mat &src, int quantScale)
 {
     //(3) reducimos la cantidad de colores en (1)
@@ -97,11 +107,17 @@ int main(int argc, char * argv[])
     int deltaLaplacian = 0;
     cv::Mat edgesAfterLaplace = edgesLaplace(afterMediantFilter,ddepth,kSizeLaplacian,scaleLaplacian,deltaLaplacian);
 
-    //(2.b) detectamos bordes de la imagen en escala de grisas usando sobel
+    //(2.b) detectamos bordes de la imagen en escala de grises usando sobel
     int kSizeSobel = 5;
     int scaleSobel = 1;
     int deltaSobel = 0;
     cv::Mat edgesAfterSobel = edgesSobel(afterMediantFilter,ddepth,kSizeSobel,scaleSobel,deltaSobel);
+
+    //(2.c) detectamos bordes de la imagen en escala de grises usando canny
+    double cannyMinThresh = 1.0f;
+    int cannyRatio = 3;
+    int kSizeCanny = 3;
+    cv::Mat edgesAfterCanny = edgesCanny(afterMediantFilter,cannyMinThresh,cannyRatio,kSizeCanny);
     
     //(3) reducimos la cantidad de colores en (1)
     int quantScale = 24;
@@ -115,11 +131,13 @@ int main(int argc, char * argv[])
     cv::namedWindow("original",cv::WINDOW_AUTOSIZE);
     cv::namedWindow("resultLaplacian",cv::WINDOW_AUTOSIZE);
     cv::namedWindow("resutlSobel",cv::WINDOW_AUTOSIZE);
+    cv::namedWindow("edgesAfterCanny",cv::WINDOW_AUTOSIZE);
    
     //mostramos las imagenes
     cv::imshow("original",src);
     cv::imshow("resultLaplacian",resultLaplacian);
     cv::imshow("resutlSobel",resutlSobel);
+    cv::imshow("edgesAfterCanny",edgesAfterCanny);
     cv::waitKey(0);
     
     cv::destroyAllWindows();
