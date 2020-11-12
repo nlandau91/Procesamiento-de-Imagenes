@@ -99,16 +99,15 @@ cv::Mat zeroCross(cv::Mat &src)
     int rows = src.rows;  
     int cols = src.cols;
 
+    //For each pixel, count the number of positive
+    //and negative pixels in the neighborhood
     for (int x = 0; x < rows; x++)      
           for (int y = 0; y < cols; y++)        
           {             
-               // Ignore borders            
-          if (x + 1 >= src.rows || x - 1 < 0 || y + 1 >= src.cols || y - 1 < 0) continue;
-
-          if ((sgn(src.at<int>(x, y)) != sgn(src.at<int>(x + 1, y)))) 
-                       edgeMap.at<uchar>(x, y) = 255;                         
-          if ((sgn(src.at<int>(x, y)) != sgn(src.at<int>(x, y + 1)))) 
-                       edgeMap.at<uchar>(x, y) = 255;       
+              int negatives=0;
+              int positives=0;
+              std::vector<uchar> v;
+              v.push_back(src.at<uchar>(cv::Point(x,y)));
           }
 
     return edgeMap;
@@ -146,7 +145,8 @@ int main(int argc, char * argv[])
     int scaleLaplacian = 5;
     int deltaLaplacian = 0;
     cv::Mat edgesAfterLaplace = edgesLaplace(afterMediantFilter,ddepth,kSizeLaplacian,scaleLaplacian,deltaLaplacian);
-    cv::Mat LoG = edgesLaplace(afterGaussianFilter,ddepth,kSizeLaplacian,scaleLaplacian,deltaLaplacian);
+    cv::Mat LoG;
+    cv::Laplacian(afterGaussianFilter,LoG,CV_64F);
     cv::Mat edgesLoG = zeroCross(LoG);
 
 
