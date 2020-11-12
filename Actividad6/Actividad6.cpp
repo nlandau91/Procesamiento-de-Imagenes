@@ -2,6 +2,7 @@
 #include <opencv2/opencv.hpp>
 #include <thread>
 #include "../include/tinyfiledialogs/tinyfiledialogs.h"
+#include <vector>
 
 cv::Mat medianFilter(cv::Mat &src, int kSize)
 {
@@ -9,6 +10,13 @@ cv::Mat medianFilter(cv::Mat &src, int kSize)
     cv::Mat afterMedianFilter;
     cv::medianBlur(src,afterMedianFilter,kSize);
     return afterMedianFilter;
+}
+
+cv::Mat gaussianFilter(cv::Mat &src,int kSize)
+{
+    cv::Mat afterGaussianFilter;
+    cv::GaussianBlur(src,afterGaussianFilter,cv::Size(kSize,kSize),0);
+    return afterGaussianFilter;
 }
 
 cv::Mat edgesLaplace(cv::Mat &src,int ddepth, int kSize, int scale, int delta)
@@ -49,6 +57,8 @@ cv::Mat edgesSobel(cv::Mat &src,int ddepth, int ksize, int scale, int delta)
     //invertimos la imagen para que los bordes sean negros
     cv::Mat edges;
     cv::bitwise_not(grad, edges);
+    //aplicamos la funcion de umbral para que los bordes esten mejor definidos
+    cv::threshold(edges, edges, 150, 255, cv::THRESH_BINARY);
     return edges;
 }
 
@@ -59,6 +69,7 @@ cv::Mat edgesCanny(cv::Mat &src,double t1, int ratio, int kSize)
     cv::cvtColor(src,grayscale,cv::COLOR_BGR2GRAY);
     cv::Mat edges;
     cv::Canny(grayscale,edges, t1, t1*ratio, kSize);
+    cv::bitwise_not(edges,edges);
     return edges;
 }
 
@@ -76,6 +87,31 @@ cv::Mat requantize(cv::Mat &src, int quantScale)
         }
     }
     return requant;
+}
+
+template <typename T> int sgn(T val) {
+    return (T(0) < val) - (val < T(0));
+}
+
+cv::Mat zeroCross(cv::Mat &src)
+{
+    cv::Mat edgeMap = cv::Mat::zeros(src.rows,src.cols,CV_8UC1);
+    int rows = src.rows;  
+    int cols = src.cols;
+
+    for (int x = 0; x < rows; x++)      
+          for (int y = 0; y < cols; y++)        
+          {             
+               // Ignore borders            
+          if (x + 1 >= src.rows || x - 1 < 0 || y + 1 >= src.cols || y - 1 < 0) continue;
+
+          if ((sgn(src.at<int>(x, y)) != sgn(src.at<int>(x + 1, y)))) 
+                       edgeMap.at<uchar>(x, y) = 255;                         
+          if ((sgn(src.at<int>(x, y)) != sgn(src.at<int>(x, y + 1)))) 
+                       edgeMap.at<uchar>(x, y) = 255;       
+          }
+
+    return edgeMap;
 }
 
 cv::Mat addEdges(cv::Mat &src, cv::Mat &edges)
@@ -96,9 +132,13 @@ int main(int argc, char * argv[])
         return -1;
     }
 
-    //(1) aplicamos filtro de la mediana
+    //(1.a) aplicamos filtro de la mediana
     int kSizeMedian = 7;
-    cv::Mat afterMediantFilter = medianFilter(src,kSizeMedian);    
+    cv::Mat afterMediantFilter = medianFilter(src,kSizeMedian);
+
+    //(1.b) aplicamos el filtro gaussiano
+    int kSizeGaussian = 7;
+    cv::Mat afterGaussianFilter = gaussianFilter(src,kSizeGaussian);
     
     //(2.a) detectamos bordes de la imagen en escala de grises usando Laplacian
     int ddepth = CV_16S;
@@ -106,15 +146,18 @@ int main(int argc, char * argv[])
     int scaleLaplacian = 5;
     int deltaLaplacian = 0;
     cv::Mat edgesAfterLaplace = edgesLaplace(afterMediantFilter,ddepth,kSizeLaplacian,scaleLaplacian,deltaLaplacian);
+    cv::Mat LoG = edgesLaplace(afterGaussianFilter,ddepth,kSizeLaplacian,scaleLaplacian,deltaLaplacian);
+    cv::Mat edgesLoG = zeroCross(LoG);
+
 
     //(2.b) detectamos bordes de la imagen en escala de grises usando sobel
-    int kSizeSobel = 5;
-    int scaleSobel = 1;
+    int kSizeSobel = 3;
+    int scaleSobel = 5;
     int deltaSobel = 0;
     cv::Mat edgesAfterSobel = edgesSobel(afterMediantFilter,ddepth,kSizeSobel,scaleSobel,deltaSobel);
 
     //(2.c) detectamos bordes de la imagen en escala de grises usando canny
-    double cannyMinThresh = 1.0f;
+    double cannyMinThresh = 10.0f;
     int cannyRatio = 3;
     int kSizeCanny = 3;
     cv::Mat edgesAfterCanny = edgesCanny(afterMediantFilter,cannyMinThresh,cannyRatio,kSizeCanny);
@@ -125,19 +168,23 @@ int main(int argc, char * argv[])
     
     //(4) agregamos a (3) los bordes obtenidos en (2)
     cv::Mat resultLaplacian = addEdges(afterRequant, edgesAfterLaplace);
-    cv::Mat resutlSobel = addEdges(afterRequant, edgesAfterSobel);
+    cv::Mat resultSobel = addEdges(afterRequant, edgesAfterSobel);
+    cv::Mat resultCanny = addEdges(afterRequant, edgesAfterCanny);
+    cv::Mat resultLoG = addEdges(afterRequant,edgesLoG);
     
     //creamos las ventanas de las imagenes
     cv::namedWindow("original",cv::WINDOW_AUTOSIZE);
     cv::namedWindow("resultLaplacian",cv::WINDOW_AUTOSIZE);
-    cv::namedWindow("resutlSobel",cv::WINDOW_AUTOSIZE);
-    cv::namedWindow("edgesAfterCanny",cv::WINDOW_AUTOSIZE);
-   
+    cv::namedWindow("resultSobel",cv::WINDOW_AUTOSIZE);
+    cv::namedWindow("resultCanny",cv::WINDOW_AUTOSIZE);
+    cv::namedWindow("resultLoG",cv::WINDOW_AUTOSIZE);
+
     //mostramos las imagenes
     cv::imshow("original",src);
     cv::imshow("resultLaplacian",resultLaplacian);
-    cv::imshow("resutlSobel",resutlSobel);
-    cv::imshow("edgesAfterCanny",edgesAfterCanny);
+    cv::imshow("resultSobel",resultSobel);
+    cv::imshow("resultCanny",resultCanny);
+    cv::imshow("resultLoG",resultLoG);
     cv::waitKey(0);
     
     cv::destroyAllWindows();

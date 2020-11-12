@@ -1,12 +1,12 @@
 #OBJS specifies which files to compile as part of the project
-OBJS = Actividad6.cpp ../include/tinyfiledialogs/tinyfiledialogs.c
+OBJS = Actividad6.cpp
 
 #CC specifies which compiler we're using
 CC = g++
 
 #COMPILER_FLAGS specifies the additional compilation options we're using
 # -w suppresses all warnings
-COMPILER_FLAGS = -w -std=c++0x -pthread `pkg-config --cflags opencv4`
+COMPILER_FLAGS = -w `pkg-config --cflags opencv4`
 
 #LINKER_FLAGS specifies the libraries we're linking against
 LINKER_FLAGS = `pkg-config --libs opencv4`
