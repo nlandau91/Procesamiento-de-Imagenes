@@ -1,36 +1,34 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
-#include <thread>
-#include "../include/tinyfiledialogs/tinyfiledialogs.h"
 #include <vector>
 
 cv::Mat medianFilter(cv::Mat &src, int kSize)
 {
     //(1) aplicamos filtro de la mediana
     cv::Mat afterMedianFilter;
-    cv::medianBlur(src,afterMedianFilter,kSize);
+    cv::medianBlur(src, afterMedianFilter, kSize);
     return afterMedianFilter;
 }
 
-cv::Mat gaussianFilter(cv::Mat &src,int kSize)
+cv::Mat gaussianFilter(cv::Mat &src, int kSize)
 {
     cv::Mat afterGaussianFilter;
-    cv::GaussianBlur(src,afterGaussianFilter,cv::Size(kSize,kSize),0);
+    cv::GaussianBlur(src, afterGaussianFilter, cv::Size(kSize, kSize), 0);
     return afterGaussianFilter;
 }
 
-cv::Mat edgesLaplace(cv::Mat &src,int ddepth, int kSize, int scale, int delta)
+cv::Mat edgesLaplace(cv::Mat &src, int ddepth, int kSize, int scale, int delta)
 {
     //(2) detectamos bordes de la imagen en escala de grises usando Laplacian
     //convertimos la imagen a escala de gris
     cv::Mat grayscale;
-    cv::cvtColor(src,grayscale,cv::COLOR_BGR2GRAY);
+    cv::cvtColor(src, grayscale, cv::COLOR_BGR2GRAY);
     //aplicamos el filtro laplaciano
     cv::Mat afterLaplace;
-    cv::Laplacian(grayscale,afterLaplace,ddepth,kSize,scale,delta,cv::BORDER_DEFAULT);
+    cv::Laplacian(grayscale, afterLaplace, ddepth, kSize, scale, delta, cv::BORDER_DEFAULT);
     //volvemos a convertir la imagen a escala de gris
     cv::Mat absAfterLaplace;
-    cv::convertScaleAbs(afterLaplace,absAfterLaplace);
+    cv::convertScaleAbs(afterLaplace, absAfterLaplace);
     //invertimos la imagen para que los bordes sean negros
     cv::Mat edges_grayscale;
     cv::bitwise_not(absAfterLaplace, edges_grayscale);
@@ -40,11 +38,11 @@ cv::Mat edgesLaplace(cv::Mat &src,int ddepth, int kSize, int scale, int delta)
     return edges;
 }
 
-cv::Mat edgesSobel(cv::Mat &src,int ddepth, int ksize, int scale, int delta)
+cv::Mat edgesSobel(cv::Mat &src, int ddepth, int ksize, int scale, int delta)
 {
     // Convert the image to grayscale
     cv::Mat grayscale;
-    cv::cvtColor(src,grayscale,cv::COLOR_BGR2GRAY);
+    cv::cvtColor(src, grayscale, cv::COLOR_BGR2GRAY);
     cv::Mat grad_x, grad_y;
     cv::Mat abs_grad_x, abs_grad_y;
     cv::Sobel(grayscale, grad_x, ddepth, 1, 0, ksize, scale, delta, cv::BORDER_DEFAULT);
@@ -62,14 +60,14 @@ cv::Mat edgesSobel(cv::Mat &src,int ddepth, int ksize, int scale, int delta)
     return edges;
 }
 
-cv::Mat edgesCanny(cv::Mat &src,double t1, int ratio, int kSize)
+cv::Mat edgesCanny(cv::Mat &src, double t1, int ratio, int kSize)
 {
     // Convert the image to grayscale
     cv::Mat grayscale;
-    cv::cvtColor(src,grayscale,cv::COLOR_BGR2GRAY);
+    cv::cvtColor(src, grayscale, cv::COLOR_BGR2GRAY);
     cv::Mat edges;
-    cv::Canny(grayscale,edges, t1, t1*ratio, kSize);
-    cv::bitwise_not(edges,edges);
+    cv::Canny(grayscale, edges, t1, t1 * ratio, kSize);
+    cv::bitwise_not(edges, edges);
     return edges;
 }
 
@@ -77,55 +75,65 @@ cv::Mat requantize(cv::Mat &src, int quantScale)
 {
     //(3) reducimos la cantidad de colores en (1)
     cv::Mat requant = src.clone();
-    for(int i = 0; i < requant.rows; i++)
+    for (int i = 0; i < requant.rows; i++)
     {
-        for(int j = 0; j < requant.cols; j++)
+        for (int j = 0; j < requant.cols; j++)
         {
-           requant.at<cv::Vec3b>(i,j)[0] = floor(requant.at<cv::Vec3b>(i,j)[0] / quantScale) * quantScale;
-           requant.at<cv::Vec3b>(i,j)[1] = floor(requant.at<cv::Vec3b>(i,j)[1] / quantScale) * quantScale;
-           requant.at<cv::Vec3b>(i,j)[2] = floor(requant.at<cv::Vec3b>(i,j)[2] / quantScale) * quantScale;
+            requant.at<cv::Vec3b>(i, j)[0] = floor(requant.at<cv::Vec3b>(i, j)[0] / quantScale) * quantScale;
+            requant.at<cv::Vec3b>(i, j)[1] = floor(requant.at<cv::Vec3b>(i, j)[1] / quantScale) * quantScale;
+            requant.at<cv::Vec3b>(i, j)[2] = floor(requant.at<cv::Vec3b>(i, j)[2] / quantScale) * quantScale;
         }
     }
     return requant;
-}
-
-template <typename T> int sgn(T val) {
-    return (T(0) < val) - (val < T(0));
-}
-
-cv::Mat zeroCross(cv::Mat &src)
-{
-    cv::Mat edgeMap = cv::Mat::zeros(src.rows,src.cols,CV_8UC1);
-    int rows = src.rows;  
-    int cols = src.cols;
-
-    //For each pixel, count the number of positive
-    //and negative pixels in the neighborhood
-    for (int x = 0; x < rows; x++)      
-          for (int y = 0; y < cols; y++)        
-          {             
-              int negatives=0;
-              int positives=0;
-              std::vector<uchar> v;
-              v.push_back(src.at<uchar>(cv::Point(x,y)));
-          }
-
-    return edgeMap;
 }
 
 cv::Mat addEdges(cv::Mat &src, cv::Mat &edges)
 {
     //(4) agregamos a (3) los bordes obtenidos en (2)
     cv::Mat result;
-    cv::bitwise_and(src,src,result,edges);
+    cv::bitwise_and(src, src, result, edges);
     return result;
 }
 
-int main(int argc, char * argv[])
+template <typename T> int sgn(T val) {
+    return (T(0) < val) - (val < T(0));
+}
+
+cv::Mat zeroCrossings(cv::Mat &image)
 {
-    char const * src_path = "car.jpg";
-    cv::Mat src = cv::imread(src_path,cv::IMREAD_UNCHANGED);
-    if(src.empty())
+    cv::Mat edgeMap = cv::Mat::zeros(image.rows, image.cols, CV_8UC1);
+
+    int rows = image.rows;
+    int cols = image.cols;
+
+    for (int x = 1; x < rows-1; x++)
+        for (int y = 1; y < cols-1; y++)
+        {
+            //calculamos los promedios de los cuatro cuadrantes
+            int q1, q2, q3, q4;
+            q1 = (image.at<int>(x-1,y-1) + image.at<int>(x,y-1) + image.at<int>(x-1,y) + image.at<int>(x,y)) / 4;
+            q2 = (image.at<int>(x,y-1) + image.at<int>(x+1,y-1) + image.at<int>(x+1,y) + image.at<int>(x,y)) / 4;
+            q3 = (image.at<int>(x-1,y) + image.at<int>(x-1,y+1) + image.at<int>(x,y+1) + image.at<int>(x,y)) / 4;
+            q4 = (image.at<int>(x+1,y) + image.at<int>(x,y+1) + image.at<int>(x+1,y+1) + image.at<int>(x,y)) / 4;
+            
+            //calculamos el minimo y el maximo de los promedios
+            int min = std::min<int>({q1,q2,q3,q4});
+            int max = std::max<int>({q1,q2,q3,q4});
+
+            //si el minimo es negativo y el maximo es positivo, consideramos al punto como un zero
+            if(max > 0 && min < 0)
+            {
+                edgeMap.at<uchar>(x,y) = 255;
+            }
+        }
+    return edgeMap;
+}
+
+int main(int argc, char *argv[])
+{
+    char const *src_path = "car.jpg";
+    cv::Mat src = cv::imread(src_path, cv::IMREAD_UNCHANGED);
+    if (src.empty())
     {
         std::cout << "No se pudo cargar la imagen" << std::endl;
         return -1;
@@ -133,59 +141,62 @@ int main(int argc, char * argv[])
 
     //(1.a) aplicamos filtro de la mediana
     int kSizeMedian = 7;
-    cv::Mat afterMediantFilter = medianFilter(src,kSizeMedian);
+    cv::Mat afterMediantFilter = medianFilter(src, kSizeMedian);
 
     //(1.b) aplicamos el filtro gaussiano
     int kSizeGaussian = 7;
-    cv::Mat afterGaussianFilter = gaussianFilter(src,kSizeGaussian);
-    
+    cv::Mat afterGaussianFilter = gaussianFilter(src, kSizeGaussian);
+
     //(2.a) detectamos bordes de la imagen en escala de grises usando Laplacian
     int ddepth = CV_16S;
     int kSizeLaplacian = 3;
     int scaleLaplacian = 5;
     int deltaLaplacian = 0;
-    cv::Mat edgesAfterLaplace = edgesLaplace(afterMediantFilter,ddepth,kSizeLaplacian,scaleLaplacian,deltaLaplacian);
-    cv::Mat LoG;
-    cv::Laplacian(afterGaussianFilter,LoG,CV_64F);
-    cv::Mat edgesLoG = zeroCross(LoG);
+    cv::Mat edgesAfterLaplace = edgesLaplace(afterMediantFilter, ddepth, kSizeLaplacian, scaleLaplacian, deltaLaplacian);
+    cv::Mat edgesLoG = edgesLaplace(afterGaussianFilter, ddepth, kSizeLaplacian, scaleLaplacian, deltaLaplacian);
 
+    cv::Mat testLoG = zeroCrossings(afterGaussianFilter);
+    cv::imshow("testLoG",testLoG);
+    cv::waitKey(0);
+
+    
 
     //(2.b) detectamos bordes de la imagen en escala de grises usando sobel
     int kSizeSobel = 3;
     int scaleSobel = 5;
     int deltaSobel = 0;
-    cv::Mat edgesAfterSobel = edgesSobel(afterMediantFilter,ddepth,kSizeSobel,scaleSobel,deltaSobel);
+    cv::Mat edgesAfterSobel = edgesSobel(afterMediantFilter, ddepth, kSizeSobel, scaleSobel, deltaSobel);
 
     //(2.c) detectamos bordes de la imagen en escala de grises usando canny
     double cannyMinThresh = 10.0f;
     int cannyRatio = 3;
     int kSizeCanny = 3;
-    cv::Mat edgesAfterCanny = edgesCanny(afterMediantFilter,cannyMinThresh,cannyRatio,kSizeCanny);
-    
+    cv::Mat edgesAfterCanny = edgesCanny(afterMediantFilter, cannyMinThresh, cannyRatio, kSizeCanny);
+
     //(3) reducimos la cantidad de colores en (1)
     int quantScale = 24;
-    cv::Mat afterRequant = requantize(afterMediantFilter,quantScale);
-    
+    cv::Mat afterRequant = requantize(afterMediantFilter, quantScale);
+
     //(4) agregamos a (3) los bordes obtenidos en (2)
     cv::Mat resultLaplacian = addEdges(afterRequant, edgesAfterLaplace);
     cv::Mat resultSobel = addEdges(afterRequant, edgesAfterSobel);
     cv::Mat resultCanny = addEdges(afterRequant, edgesAfterCanny);
-    cv::Mat resultLoG = addEdges(afterRequant,edgesLoG);
-    
+    cv::Mat resultLoG = addEdges(afterRequant, edgesLoG);
+
     //creamos las ventanas de las imagenes
-    cv::namedWindow("original",cv::WINDOW_AUTOSIZE);
-    cv::namedWindow("resultLaplacian",cv::WINDOW_AUTOSIZE);
-    cv::namedWindow("resultSobel",cv::WINDOW_AUTOSIZE);
-    cv::namedWindow("resultCanny",cv::WINDOW_AUTOSIZE);
-    cv::namedWindow("resultLoG",cv::WINDOW_AUTOSIZE);
+    cv::namedWindow("original", cv::WINDOW_AUTOSIZE);
+    cv::namedWindow("resultLaplacian", cv::WINDOW_AUTOSIZE);
+    cv::namedWindow("resultSobel", cv::WINDOW_AUTOSIZE);
+    cv::namedWindow("resultCanny", cv::WINDOW_AUTOSIZE);
+    cv::namedWindow("resultLoG", cv::WINDOW_AUTOSIZE);
 
     //mostramos las imagenes
-    cv::imshow("original",src);
-    cv::imshow("resultLaplacian",resultLaplacian);
-    cv::imshow("resultSobel",resultSobel);
-    cv::imshow("resultCanny",resultCanny);
-    cv::imshow("resultLoG",resultLoG);
+    cv::imshow("original", src);
+    cv::imshow("resultLaplacian", resultLaplacian);
+    cv::imshow("resultSobel", resultSobel);
+    cv::imshow("resultCanny", resultCanny);
+    cv::imshow("resultLoG", resultLoG);
     cv::waitKey(0);
-    
+
     cv::destroyAllWindows();
 }
