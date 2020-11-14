@@ -145,7 +145,54 @@ void zeroCross(cv::Mat &src, cv::Mat &result, double threshold)
     }
 }
 
-cv::Mat edgesLoG(cv::Mat src, int gaussKSize = 13, int gaussDelta = 2, int laplaceKSize = 3, int laplaceScaleSize = 1)
+//encuentra los cruces por cero de una imagen. Alt
+void zeroCross2(cv::Mat &src, cv::Mat &result, double threshold)
+{
+    for (int y = 1; y < src.rows - 1; ++y)
+    {
+        for (int x = 1; x < src.cols; ++x)
+        {
+            float q1, q2, q3, q4;
+            q1 = src.at<float>(y,x) + src.at<float>(y-1,x) + src.at<float>(y-1,x-1) + src.at<float>(y,x-1);
+            q2 = src.at<float>(y,x) + src.at<float>(y,x-1) + src.at<float>(y+1,x-1) + src.at<float>(y+1,x);
+            q3 = src.at<float>(y,x) + src.at<float>(y+1,x) + src.at<float>(y+1,x+1) + src.at<float>(y,x+1);
+            q4 = src.at<float>(y,x) + src.at<float>(y,x+1) + src.at<float>(y-1,x+1) + src.at<float>(y-1,x);
+            float max = std::max({q1,q2,q3,q4});
+            float min = std::min({q1,q2,q3,q4});
+            if(max > 0 && min < 0 && (std::abs(max-min) > threshold))
+            {
+                result.at<uchar>(y,x) = 255;
+            }
+        }
+    }
+}
+
+void zeroCross3(cv::Mat &src, cv::Mat &result, double threshold)
+{
+    for (int y = 1; y < src.rows - 1; ++y)
+    {
+        for (int x = 1; x < src.cols; ++x)
+        {
+            float p1, p2, p3, p4, p5, p6, p7, p8;
+            p1 = src.at<float>(y-1,x-1);
+            p2 = src.at<float>(y-1,x);
+            p3 = src.at<float>(y-1,x+1);
+            p4 = src.at<float>(y,x-1);
+            p5 = src.at<float>(y,x+1);
+            p6 = src.at<float>(y+1,x-1);
+            p7 = src.at<float>(y+1,x);
+            p8 = src.at<float>(y+1,x+1);
+            float max = std::max({p1,p2,p3,p4,p5,p6,p7,p8});
+            float min = std::min({p1,p2,p3,p4,p5,p6,p7,p8});
+            if(max > 0 && min < 0 && (std::abs(max-min) > threshold))
+            {
+                result.at<uchar>(y,x) = 255;
+            }
+        }
+    }
+}
+
+cv::Mat edgesLoG(cv::Mat src, int gaussKSize = 13, int gaussDelta = 2, int laplaceKSize = 3, int laplaceScaleSize = 1, float zeroCrossThreshold = 0.01)
 {
     //Image is converted to grayscale
     cv::Mat gray(src.size(), CV_32FC1);
@@ -161,15 +208,10 @@ cv::Mat edgesLoG(cv::Mat src, int gaussKSize = 13, int gaussDelta = 2, int lapla
     cv::Mat Laplace = cv::Mat::zeros(gaussianblur.size(), CV_32FC1);
     cv::Laplacian(gaussianblur,Laplace,CV_32FC1,laplaceKSize,laplaceScaleSize);
 
-    // Find the maximum value of the minimum, for the reference threshold as a reference
-    double max = 0;
-    double min = 0;
-    cv::minMaxLoc(Laplace, &min, &max);
-
     //Neighborhood decision, zero cross search
     cv::Mat result;
     result = cv::Mat::zeros(Laplace.size(), CV_8U);
-    zeroCross(Laplace, result, 0.02);
+    zeroCross2(Laplace, result, zeroCrossThreshold);
 
     //invertimos la imagen para que los bordes sean negros
     cv::bitwise_not(result, result);
@@ -181,6 +223,10 @@ cv::Mat edgesLoG(cv::Mat src, int gaussKSize = 13, int gaussDelta = 2, int lapla
 int main(int argc, char *argv[])
 {
     char const *src_path = "car.jpg";
+    if(argc > 1)
+    {
+        src_path = argv[1];
+    }
     cv::Mat src = cv::imread(src_path, cv::IMREAD_UNCHANGED);
     if (src.empty())
     {
@@ -206,13 +252,13 @@ int main(int argc, char *argv[])
     cv::Mat edgesAfterSobel = edgesSobel(afterMediantFilter, ddepth, kSizeSobel, scaleSobel, deltaSobel);
 
     //(2.c) detectamos bordes de la imagen en escala de grises usando canny
-    double cannyMinThresh = 10.0f;
-    int cannyRatio = 3;
-    int kSizeCanny = 3;
+    double cannyMinThresh = 4.0f;
+    int cannyRatio = 2;
+    int kSizeCanny = 7;
     cv::Mat edgesAfterCanny = edgesCanny(afterMediantFilter, cannyMinThresh, cannyRatio, kSizeCanny);
 
     //(2.d) detectamos bordes de la imagen en escala de grises usando LoG
-    cv::Mat edgesAfterLoG = edgesLoG(afterMediantFilter);
+    cv::Mat edgesAfterLoG = edgesLoG(afterMediantFilter,13,4);
 
 
     //(3) reducimos la cantidad de colores en (1)
@@ -238,6 +284,10 @@ int main(int argc, char *argv[])
     cv::imshow("resultSobel", resultSobel);
     cv::imshow("resultCanny", resultCanny);
     cv::imshow("resultLoG", resultLoG);
+    cv::imwrite("resultLaplacian.png", resultLaplacian);
+    cv::imwrite("resultSobel.png", resultSobel);
+    cv::imwrite("resultCanny.png", resultCanny);
+    cv::imwrite("resultLoG.png", resultLoG);
     cv::waitKey(0);
 
     cv::destroyAllWindows();
