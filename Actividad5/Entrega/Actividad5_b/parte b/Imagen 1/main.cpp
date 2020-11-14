@@ -36,15 +36,9 @@ main()
 
     //mostramos las imagenes de los pasos
     cv::namedWindow("src",cv::WINDOW_AUTOSIZE);
-    cv::namedWindow("translated",cv::WINDOW_AUTOSIZE);
-    cv::namedWindow("rotated",cv::WINDOW_AUTOSIZE);
     cv::namedWindow("restored",cv::WINDOW_AUTOSIZE);
     cv::imshow("src",src);;
-    cv::imshow("translated",translatedImage);
-    cv::imshow("rotated",rotatedImage);
     cv::imshow("restored",restoredImage);
-    cv::imwrite("translated.jpg",translatedImage);
-    cv::imwrite("rotated.jpg",rotatedImage);
     cv::imwrite("restored.jpg",restoredImage);
     cv::waitKey(0);
 

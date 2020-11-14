@@ -32,12 +32,9 @@ main()
 
     //mostramos las imagenes de los pasos
     cv::namedWindow("src",cv::WINDOW_FREERATIO);
-    cv::namedWindow("scaled",cv::WINDOW_FREERATIO);
     cv::namedWindow("restored",cv::WINDOW_FREERATIO);
     cv::imshow("src",src);
-    cv::imshow("scaled",scaledImage);
     cv::imshow("restored",restoredImage);
-    cv::imwrite("scaled.jpg",scaledImage);
     cv::imwrite("restored.jpg",restoredImage);
     cv::waitKey(0);
     

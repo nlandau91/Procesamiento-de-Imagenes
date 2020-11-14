@@ -1,3 +1,0 @@
-Transformada Perspectiva con matriz R = [1.8 1.9 ; 1.2 0.2];
-
-Escalado Simétrico con un factor de escala de 1.1

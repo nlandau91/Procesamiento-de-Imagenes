@@ -10,13 +10,6 @@ cv::Mat medianFilter(cv::Mat &src, int kSize)
     return afterMedianFilter;
 }
 
-cv::Mat gaussianFilter(cv::Mat &src, int kSize)
-{
-    cv::Mat afterGaussianFilter;
-    cv::GaussianBlur(src, afterGaussianFilter, cv::Size(kSize, kSize), 0);
-    return afterGaussianFilter;
-}
-
 cv::Mat edgesLaplace(cv::Mat &src, int ddepth, int kSize, int scale, int delta)
 {
     //(2) detectamos bordes de la imagen en escala de grises usando Laplacian
@@ -95,38 +88,94 @@ cv::Mat addEdges(cv::Mat &src, cv::Mat &edges)
     return result;
 }
 
-template <typename T> int sgn(T val) {
-    return (T(0) < val) - (val < T(0));
+// Pasamos el rango dinamico de la imagen a [0,1]
+void ImageAdjust(cv::Mat &src, cv::Mat &dst)
+{
+    for (int i = 0; i < src.rows; i++)
+    {
+        for (int j = 0; j < src.cols; j++)
+        {
+            int g = src.at<uchar>(i, j);
+            dst.at<float>(i, j) = g / 255.;
+        }
+    }
 }
 
-cv::Mat zeroCrossings(cv::Mat &image)
+//encuentra los cruces por cero de una imagen
+void zeroCross(cv::Mat &src, cv::Mat &result, double threshold)
 {
-    cv::Mat edgeMap = cv::Mat::zeros(image.rows, image.cols, CV_8UC1);
-
-    int rows = image.rows;
-    int cols = image.cols;
-
-    for (int x = 1; x < rows-1; x++)
-        for (int y = 1; y < cols-1; y++)
+    for (int y = 1; y < src.rows - 1; ++y)
+    {
+        for (int x = 1; x < src.cols; ++x)
         {
-            //calculamos los promedios de los cuatro cuadrantes
-            int q1, q2, q3, q4;
-            q1 = (image.at<int>(x-1,y-1) + image.at<int>(x,y-1) + image.at<int>(x-1,y) + image.at<int>(x,y)) / 4;
-            q2 = (image.at<int>(x,y-1) + image.at<int>(x+1,y-1) + image.at<int>(x+1,y) + image.at<int>(x,y)) / 4;
-            q3 = (image.at<int>(x-1,y) + image.at<int>(x-1,y+1) + image.at<int>(x,y+1) + image.at<int>(x,y)) / 4;
-            q4 = (image.at<int>(x+1,y) + image.at<int>(x,y+1) + image.at<int>(x+1,y+1) + image.at<int>(x,y)) / 4;
-            
-            //calculamos el minimo y el maximo de los promedios
-            int min = std::min<int>({q1,q2,q3,q4});
-            int max = std::max<int>({q1,q2,q3,q4});
-
-            //si el minimo es negativo y el maximo es positivo, consideramos al punto como un zero
-            if(max > 0 && min < 0)
+            // neighborhood determination
+            if ((src.at<float>(y - 1, x) *
+                     src.at<float>(y + 1, x) <
+                 0) &&
+                (std::abs(src.at<float>(y - 1, x) -
+                          src.at<float>(y + 1, x)) > threshold))
             {
-                edgeMap.at<uchar>(x,y) = 255;
+                result.at<uchar>(y, x) = 255;
+            }
+            if ((src.at<float>(y, x - 1) *
+                     src.at<float>(y, x + 1) <
+                 0) &&
+                (std::abs(src.at<float>(y, x - 1) -
+                          src.at<float>(y, x + 1)) > threshold))
+            {
+                result.at<uchar>(y, x) = 255;
+            }
+            if ((src.at<float>(y + 1, x - 1) *
+                     src.at<float>(y - 1, x + 1) <
+                 0) &&
+                (std::abs(src.at<float>(y + 1, x - 1) -
+                          src.at<float>(y - 1, x + 1)) > threshold))
+            {
+                result.at<uchar>(y, x) = 255;
+            }
+            if ((src.at<float>(y - 1, x - 1) *
+                     src.at<float>(y + 1, x + 1) <
+                 0) &&
+                (std::abs(src.at<float>(y - 1, x - 1) -
+                          src.at<float>(y + 1, x + 1)) > threshold))
+            {
+                result.at<uchar>(y, x) = 255;
             }
         }
-    return edgeMap;
+    }
+}
+
+cv::Mat edgesLoG(cv::Mat src, int gaussKSize = 13, int gaussDelta = 2, int laplaceKSize = 3, int laplaceScaleSize = 1)
+{
+    //Image is converted to grayscale
+    cv::Mat gray(src.size(), CV_32FC1);
+    cv::cvtColor(src, gray, cv::COLOR_BGR2GRAY);
+    cv::Mat gray01;
+    gray01 = cv::Mat::zeros(gray.size(), CV_32FC1);
+    ImageAdjust(gray, gray01);
+    //Generate a Gaussian kernel matrix and smooth the image
+    cv::Mat gaussianblur;
+    cv::GaussianBlur(gray01,gaussianblur,cv::Size(gaussKSize,gaussKSize),gaussDelta);
+
+    // Laplacian transformation of the image after smoothing cv::Mat Laplace;
+    cv::Mat Laplace = cv::Mat::zeros(gaussianblur.size(), CV_32FC1);
+    cv::Laplacian(gaussianblur,Laplace,CV_32FC1,laplaceKSize,laplaceScaleSize);
+
+    // Find the maximum value of the minimum, for the reference threshold as a reference
+    double max = 0;
+    double min = 0;
+    cv::minMaxLoc(Laplace, &min, &max);
+
+    //Neighborhood decision, zero cross search
+    cv::Mat result;
+    result = cv::Mat::zeros(Laplace.size(), CV_8U);
+    zeroCross(Laplace, result, 0.02);
+
+    //invertimos la imagen para que los bordes sean negros
+    cv::bitwise_not(result, result);
+
+
+    return result;
 }
 
 int main(int argc, char *argv[])
@@ -143,23 +192,12 @@ int main(int argc, char *argv[])
     int kSizeMedian = 7;
     cv::Mat afterMediantFilter = medianFilter(src, kSizeMedian);
 
-    //(1.b) aplicamos el filtro gaussiano
-    int kSizeGaussian = 7;
-    cv::Mat afterGaussianFilter = gaussianFilter(src, kSizeGaussian);
-
     //(2.a) detectamos bordes de la imagen en escala de grises usando Laplacian
     int ddepth = CV_16S;
     int kSizeLaplacian = 3;
     int scaleLaplacian = 5;
     int deltaLaplacian = 0;
     cv::Mat edgesAfterLaplace = edgesLaplace(afterMediantFilter, ddepth, kSizeLaplacian, scaleLaplacian, deltaLaplacian);
-    cv::Mat edgesLoG = edgesLaplace(afterGaussianFilter, ddepth, kSizeLaplacian, scaleLaplacian, deltaLaplacian);
-
-    cv::Mat testLoG = zeroCrossings(afterGaussianFilter);
-    cv::imshow("testLoG",testLoG);
-    cv::waitKey(0);
-
-    
 
     //(2.b) detectamos bordes de la imagen en escala de grises usando sobel
     int kSizeSobel = 3;
@@ -173,6 +211,10 @@ int main(int argc, char *argv[])
     int kSizeCanny = 3;
     cv::Mat edgesAfterCanny = edgesCanny(afterMediantFilter, cannyMinThresh, cannyRatio, kSizeCanny);
 
+    //(2.d) detectamos bordes de la imagen en escala de grises usando LoG
+    cv::Mat edgesAfterLoG = edgesLoG(afterMediantFilter);
+
+
     //(3) reducimos la cantidad de colores en (1)
     int quantScale = 24;
     cv::Mat afterRequant = requantize(afterMediantFilter, quantScale);
@@ -181,7 +223,7 @@ int main(int argc, char *argv[])
     cv::Mat resultLaplacian = addEdges(afterRequant, edgesAfterLaplace);
     cv::Mat resultSobel = addEdges(afterRequant, edgesAfterSobel);
     cv::Mat resultCanny = addEdges(afterRequant, edgesAfterCanny);
-    cv::Mat resultLoG = addEdges(afterRequant, edgesLoG);
+    cv::Mat resultLoG = addEdges(afterRequant, edgesAfterLoG);
 
     //creamos las ventanas de las imagenes
     cv::namedWindow("original", cv::WINDOW_AUTOSIZE);
