@@ -1,5 +1,5 @@
 #OBJS specifies which files to compile as part of the project
-OBJS = Actividad6.cpp Cartoonify.cpp
+OBJS = Actividad6.cpp Cartoonify.cpp Callbacks.cpp
 
 #CC specifies which compiler we're using
 CC = g++

@@ -41,7 +41,7 @@ public:
         int deltaGauss;
         int kSizeLaplace;
         int scaleLaplace;
-        float zeroCrossThrehold;
+        float zeroCrossThreshold;
     } loGParameters;
 
     int kSizeMedian;

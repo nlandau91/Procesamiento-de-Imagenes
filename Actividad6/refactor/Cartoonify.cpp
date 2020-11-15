@@ -19,7 +19,7 @@ Cartoonify::Cartoonify()
     loGParameters.deltaGauss = 2;
     loGParameters.kSizeLaplace = 3;
     loGParameters.scaleLaplace = 1;
-    loGParameters.zeroCrossThrehold = 0.01;
+    loGParameters.zeroCrossThreshold = 0.01;
 }
 
 cv::Mat Cartoonify::getCartoon(cv::Mat &src, EdgeMode edgemode)
@@ -42,11 +42,11 @@ cv::Mat Cartoonify::getCartoon(cv::Mat &src, EdgeMode edgemode)
     }
     if (edgemode == LOG1)
     {
-        edges = edgesLoG(afterMediantFilter, 0, loGParameters.kSizeGauss, loGParameters.deltaGauss, loGParameters.kSizeLaplace, loGParameters.scaleLaplace, loGParameters.zeroCrossThrehold);
+        edges = edgesLoG(afterMediantFilter, 0, loGParameters.kSizeGauss, loGParameters.deltaGauss, loGParameters.kSizeLaplace, loGParameters.scaleLaplace, loGParameters.zeroCrossThreshold);
     }
     if (edgemode == LOG2)
     {
-        edges = edgesLoG(afterMediantFilter, 1, loGParameters.kSizeGauss, loGParameters.deltaGauss, loGParameters.kSizeLaplace, loGParameters.scaleLaplace, loGParameters.zeroCrossThrehold);
+        edges = edgesLoG(afterMediantFilter, 1, loGParameters.kSizeGauss, loGParameters.deltaGauss, loGParameters.kSizeLaplace, loGParameters.scaleLaplace, loGParameters.zeroCrossThreshold);
     }
 
     //reducimos la cantidad de colores
