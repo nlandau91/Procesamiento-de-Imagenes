@@ -79,9 +79,13 @@ int main(int argc, char *argv[])
     cv::imshow("resultLoG", data.resultLoG);
     cv::imshow("resultLoG2", data.resultLoG2);
 
-
-
     cv::waitKey(0);
+    
+    cv::imwrite("resultLaplacian.png", data.resultLaplacian);
+    cv::imwrite("resultSobel.png", data.resultSobel);
+    cv::imwrite("resultCanny.png", data.resultCanny);
+    cv::imwrite("resultLoG.png", data.resultLoG);
+    cv::imwrite("resultLoG2.png", data.resultLoG);
 
     cv::destroyAllWindows();
 }
