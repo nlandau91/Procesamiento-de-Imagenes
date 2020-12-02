@@ -28,6 +28,7 @@ cv::Mat corregirPerspectiva(cv::Mat &src)
     cv::copyMakeBorder(thr, thr, 5, 5, 5, 5, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
     cv::Mat edges;
     cv::Canny(thr, edges, 200, 250);
+    cv::waitKey(0);
     //ahora que tenemos los bordes, encontramos el contorno
     //cv::Mat contours;
     std::vector<std::vector<cv::Point>> contours;
@@ -73,7 +74,6 @@ cv::Mat corregirPerspectiva(cv::Mat &src)
         }
         idx++;
     }
-    std::cout << maxidx << std::endl;
     //cv::drawContours(src,contours,maxidx,cv::Scalar(255,255,255),1,cv::LINE_8,hierarchy,0);
 
     //ahora tenemos los 4 puntos que definen el contorno
@@ -147,10 +147,12 @@ int main(int argc, char *argv[])
     }
     //empezamos por corregir la perspectiva de la hoja
     cv::Mat corrected = corregirPerspectiva(src);
-
     cv::namedWindow("src",cv::WINDOW_NORMAL);
     cv::namedWindow("corrected",cv::WINDOW_NORMAL);
     cv::imshow("src", src);
     cv::imshow("corrected", corrected);
     cv::waitKey(0);
+
+    //ahora que tenemos la perspectiva corregida, procedemos a identificar circulos
+
 }
