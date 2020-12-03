@@ -147,6 +147,10 @@ int main(int argc, char *argv[])
     }
     //empezamos por corregir la perspectiva de la hoja
     cv::Mat corrected = corregirPerspectiva(src);
+    //ahora aplicamos thresholds a la imagen para separar los colores que nos interesan
+    //esto es mas sencillo si utilizamos hsv
+    cv::Mat hsv_image;
+    cv::cvtColor(corrected,hsv_image,cv::COLOR_BGR2HSV);
     cv::namedWindow("src",cv::WINDOW_NORMAL);
     cv::namedWindow("corrected",cv::WINDOW_NORMAL);
     cv::imshow("src", src);
