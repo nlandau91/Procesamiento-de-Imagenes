@@ -1,12 +1,71 @@
-#include <opencv2/opencv.hpp>
-#include <iostream>
+#include "mainwindow.h"
+#include "ui_mainwindow.h"
+#include <QFileDialog>
 
-cv::Mat resize(cv::Mat &src, int h = 800)
+inline QImage  cvMatToQImage( const cv::Mat &inMat )
 {
-    double ratio = (double)h / src.rows;
-    cv::Mat dst;
-    cv::resize(src, dst, cv::Size(), ratio, ratio);
-    return dst;
+    switch ( inMat.type() )
+    {
+    // 8-bit, 4 channel
+    case CV_8UC4:
+    {
+        QImage image( inMat.data, inMat.cols, inMat.rows, inMat.step, QImage::Format_RGB32 );
+
+        return image;
+    }
+
+        // 8-bit, 3 channel
+    case CV_8UC3:
+    {
+        QImage image( inMat.data, inMat.cols, inMat.rows, inMat.step, QImage::Format_RGB888 );
+
+        return image.rgbSwapped();
+    }
+
+        // 8-bit, 1 channel
+    case CV_8UC1:
+    {
+        static QVector<QRgb>  sColorTable;
+
+        // only create our color table once
+
+        QImage image( inMat.data, inMat.cols, inMat.rows, inMat.step, QImage::Format_Indexed8 );
+        return image;
+    }
+
+    default:
+    {
+        break;
+    }
+
+    }
+
+    return QImage();
+}
+
+inline QPixmap cvMatToQPixmap( const cv::Mat &inMat )
+{
+    return QPixmap::fromImage( cvMatToQImage( inMat ) );
+}
+
+void MainWindow::update_image()
+{
+    int w =  ui->lbl_img->width();
+    int h =  ui->lbl_img->height();
+    ui->lbl_img->setPixmap(cvMatToQPixmap(result).scaled(w,h,Qt::KeepAspectRatio));
+    //ui->lbl_img->setScaledContents(true);
+    //ui->lbl_img->setSizePolicy((QSizePolicy::Ignored,QSizePolicy::Ignored));
+}
+
+void MainWindow::resizeEvent(QResizeEvent *event)
+{
+    //int h = event->size().height();
+    //int w = event->size().width();
+    //std::cout << "h: " << h << "w: " << w <<std::endl;
+    if(!result.empty())
+    {
+        update_image();
+    }
 }
 
 //corrige la perspectiva de una imagen
@@ -136,20 +195,8 @@ cv::Mat corregirPerspectiva(cv::Mat &src)
     return transformed;
 }
 
-int main(int argc, char *argv[])
+cv::Mat procesar(cv::Mat &src)
 {
-    //leemos la imagen
-    char const *src_path = "img.png";
-    if (argc > 1)
-    {
-        src_path = argv[1];
-    }
-    cv::Mat src = cv::imread(src_path, cv::IMREAD_UNCHANGED);
-    if (src.empty())
-    {
-        std::cout << "No se pudo cargar la imagen" << std::endl;
-        return -1;
-    }
     //empezamos por corregir la perspectiva de la hoja
     cv::Mat corrected = corregirPerspectiva(src);
     //ahora que tenemos la perspectiva corregida, procedemos a identificar circulos
@@ -194,9 +241,9 @@ int main(int argc, char *argv[])
     std::vector<cv::Vec3f> red_circles;
     std::vector<cv::Vec3f> orange_circles;
     std::vector<cv::Vec3f> yellow_circles;
-    cv::HoughCircles(en_rango_rojo, red_circles, cv::HOUGH_GRADIENT, 1, 
-    en_rango_rojo.rows / 4, // change this value to detect circles with different distances to each other
-    100, 20, 0, 0); // change the last two parameters (min_radius & max_radius) to detect larger circles
+    cv::HoughCircles(en_rango_rojo, red_circles, cv::HOUGH_GRADIENT, 1,
+                     en_rango_rojo.rows / 4, // change this value to detect circles with different distances to each other
+                     100, 20, 0, 0); // change the last two parameters (min_radius & max_radius) to detect larger circles
     cv::HoughCircles(en_rango_naranja, orange_circles, cv::HOUGH_GRADIENT, 1, en_rango_naranja.rows / 4, 100, 20, 0, 0);
     cv::HoughCircles(en_rango_amarillo, yellow_circles, cv::HOUGH_GRADIENT, 1, en_rango_amarillo.rows / 4, 100, 20, 0, 0);
     // Loop over all detected circles and outline them on the original image
@@ -207,7 +254,7 @@ int main(int argc, char *argv[])
             cv::Point center(std::round(red_circles[current_circle][0]), std::round(red_circles[current_circle][1]));
             int radius = std::round(red_circles[current_circle][2]);
 
-            cv::circle(corrected, center, radius, cv::Scalar(181,113,255), 5);
+            cv::circle(corrected, center, radius, cv::Scalar(181,113,255,255), 5);
         }
     }
     if (orange_circles.size() > 0)
@@ -217,7 +264,7 @@ int main(int argc, char *argv[])
             cv::Point center(std::round(orange_circles[current_circle][0]), std::round(orange_circles[current_circle][1]));
             int radius = std::round(orange_circles[current_circle][2]);
 
-            cv::circle(corrected, center, radius, cv::Scalar(16,64,180), 5);
+            cv::circle(corrected, center, radius, cv::Scalar(16,64,180,255), 5);
         }
     }
     if (yellow_circles.size() > 0)
@@ -227,20 +274,45 @@ int main(int argc, char *argv[])
             cv::Point center(std::round(yellow_circles[current_circle][0]), std::round(yellow_circles[current_circle][1]));
             int radius = std::round(yellow_circles[current_circle][2]);
 
-            cv::circle(corrected, center, radius, cv::Scalar(0,255,255), 5);
+            cv::circle(corrected, center, radius, cv::Scalar(0,255,255,255), 5);
         }
     }
+    return corrected;
+}
 
-    cv::namedWindow("src", cv::WINDOW_NORMAL);
-    cv::namedWindow("corrected", cv::WINDOW_NORMAL);
-    //cv::namedWindow("en_rango_rojo", cv::WINDOW_NORMAL);
-    //cv::namedWindow("en_rango_naranja", cv::WINDOW_NORMAL);
-    //cv::namedWindow("en_rango_amarillo", cv::WINDOW_NORMAL);
-    cv::imshow("src", src);
-    cv::imshow("corrected", corrected);
-    //cv::imshow("en_rango_rojo", en_rango_rojo);
-    //cv::imshow("en_rango_naranja", en_rango_naranja);
-    //cv::imshow("en_rango_amarillo", en_rango_amarillo);
-    cv::waitKey(0);
-    cv::destroyAllWindows();
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent)
+    , ui(new Ui::MainWindow)
+{
+    ui->setupUi(this);
+}
+
+MainWindow::~MainWindow()
+{
+    delete ui;
+}
+
+
+void MainWindow::on_btn_load_clicked()
+{
+    src = cv::imread("../img2.png",cv::IMREAD_UNCHANGED);
+    if(!src.empty())
+    {
+        result = src.clone();
+        update_image();
+        ui->btn_procesar->setEnabled(true);
+    }
+
+}
+
+void MainWindow::on_btn_procesar_clicked()
+{
+    result = procesar(src);
+    update_image();
+}
+
+void MainWindow::on_btn_save_clicked()
+{
+    QString filename = QFileDialog::getSaveFileName(this,tr("Save Image"),"",tr("jpg (*.jpg);;png (*.png);;All Files (*)"));
+    cv::imwrite(filename.toStdString(),result);
 }
