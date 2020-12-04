@@ -24,13 +24,24 @@ private slots:
 
     void on_btn_save_clicked();
 
+    void on_radioBtn_rojo_clicked();
+
+    void on_radioBtn_naranja_clicked();
+
+    void on_radioBtn_amarillo_clicked();
+
+    void on_radioBtn_result_clicked();
+
 private:
     Ui::MainWindow *ui;
     cv::Mat src;
+    cv::Mat thresholds[7];
     cv::Mat result;
 
-    void update_image();
+    void update_image(cv::Mat &newMat);
     void resizeEvent(QResizeEvent *event);
+    cv::Mat procesar(cv::Mat &src);
+    void resetUi();
 
 };
 #endif // MAINWINDOW_H
