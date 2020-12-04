@@ -139,7 +139,6 @@ cv::Mat corregirPerspectiva(cv::Mat &src)
         idx++;
     }
     //cv::drawContours(src,contours,maxidx,cv::Scalar(255,255,255),1,cv::LINE_8,hierarchy,0);
-
     //ahora tenemos los 4 puntos que definen el contorno
     //los ordenamos en sentido antihorario comenzando por la esquina superior izquierda
     double midX = pageContour[0].x + pageContour[1].x + pageContour[2].x + pageContour[3].x;
@@ -183,12 +182,18 @@ cv::Mat corregirPerspectiva(cv::Mat &src)
         }
     }
 
-    cv::Rect boundRect = cv::boundingRect(pageContour);
     std::vector<cv::Point2f> squre_pts; //puntos destino
-    squre_pts.push_back(cv::Point2f(boundRect.x, boundRect.y));
-    squre_pts.push_back(cv::Point2f(boundRect.x, boundRect.y + boundRect.height));
-    squre_pts.push_back(cv::Point2f(boundRect.x + boundRect.width, boundRect.y + boundRect.height));
-    squre_pts.push_back(cv::Point2f(boundRect.x + boundRect.width, boundRect.y));
+    //cv::Rect boundRect = cv::boundingRect(pageContour);
+    //squre_pts.push_back(cv::Point2f(boundRect.x, boundRect.y));
+    //squre_pts.push_back(cv::Point2f(boundRect.x, boundRect.y + boundRect.height));
+    //squre_pts.push_back(cv::Point2f(boundRect.x + boundRect.width, boundRect.y + boundRect.height));
+    //squre_pts.push_back(cv::Point2f(boundRect.x + boundRect.width, boundRect.y));
+    int cols = src.cols;
+    int rows = src.rows;
+    squre_pts.push_back(cv::Point2f(0,0));
+    squre_pts.push_back(cv::Point2f(0,rows));
+    squre_pts.push_back(cv::Point2f(cols,rows));
+    squre_pts.push_back(cv::Point2f(cols,0));
     cv::Mat transmtx = cv::getPerspectiveTransform(quad_pts, squre_pts);
     cv::Mat transformed = cv::Mat::zeros(src.rows, src.cols, CV_8UC3);
     cv::warpPerspective(src, transformed, transmtx, src.size());
@@ -246,7 +251,7 @@ cv::Mat procesar(cv::Mat &src)
                      100, 20, 0, 0); // change the last two parameters (min_radius & max_radius) to detect larger circles
     cv::HoughCircles(en_rango_naranja, orange_circles, cv::HOUGH_GRADIENT, 1, en_rango_naranja.rows / 4, 100, 20, 0, 0);
     cv::HoughCircles(en_rango_amarillo, yellow_circles, cv::HOUGH_GRADIENT, 1, en_rango_amarillo.rows / 4, 100, 20, 0, 0);
-    // Loop over all detected circles and outline them on the original image
+    //iteramos sobre los circulos encontrados para dibujar un circulo en la imagen original
     if (red_circles.size() > 0)
     {
         for (size_t current_circle = 0; current_circle < red_circles.size(); ++current_circle)
@@ -295,7 +300,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_btn_load_clicked()
 {
-    src = cv::imread("../img2.png",cv::IMREAD_UNCHANGED);
+    src = cv::imread("../res/img1.jpg",cv::IMREAD_UNCHANGED);
     if(!src.empty())
     {
         result = src.clone();
