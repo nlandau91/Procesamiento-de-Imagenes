@@ -52,6 +52,7 @@ void MainWindow::update_image(cv::Mat &newMat)
 {
     int w =  ui->lbl_img->width();
     int h =  ui->lbl_img->height();
+    cvMats[CVMAT_ACTUAL] = newMat;
     ui->lbl_img->setPixmap(cvMatToQPixmap(newMat).scaled(w,h,Qt::KeepAspectRatio));
     //ui->lbl_img->setScaledContents(true);
     //ui->lbl_img->setSizePolicy((QSizePolicy::Ignored,QSizePolicy::Ignored));
@@ -64,7 +65,7 @@ void MainWindow::resizeEvent(QResizeEvent *event)
     //std::cout << "h: " << h << "w: " << w <<std::endl;
     if(ui->radioBtn_result->isEnabled())
     {
-        //update_image();
+        update_image(cvMats[CVMAT_ACTUAL]);
     }
 }
 
@@ -111,7 +112,7 @@ cv::Mat corregirPerspectiva(cv::Mat &src)
     std::vector<cv::Point> pageContour = {cv::Point(5, 5), cv::Point(5, height - 5), cv::Point(width - 5, height - 5), cv::Point(width - 5, 5)};
     //iteramos sobre todos los contornos
     int idx = 0;
-    int maxidx = 0;
+    //int maxidx = 0;
     for (std::vector<cv::Point> cnt : contours)
     {
         //simplificamos el contorno
@@ -132,7 +133,7 @@ cv::Mat corregirPerspectiva(cv::Mat &src)
                 {
                     maxAreaFound = area;
                     pageContour = approx;
-                    maxidx = idx;
+                   // maxidx = idx;
                 }
             }
         }
@@ -200,6 +201,48 @@ cv::Mat corregirPerspectiva(cv::Mat &src)
     return transformed;
 }
 
+void MainWindow::obtener_thresholds(cv::Mat &src, std::vector<cv::Mat> &dst)
+{
+    //la convertimos a hsv, ya que es mas facil diferenciar colores
+    cv::Mat img_hsv;
+    cv::cvtColor(src,img_hsv,cv::COLOR_BGR2HSV);
+
+    //establecemos los rangos para los thresholds
+    //H va de 0 a 180
+    //S va de 0 a 255
+    //V va de 0 a 255
+
+    cv::Scalar rojo_low_1 = cv::Scalar(0/2, 0.15*255, 0.55*255);
+    cv::Scalar rojo_high_1 = cv::Scalar(25/2,0.45*255, 0.9*255);
+
+    cv::Scalar rojo_low_2 = cv::Scalar(290/2, 0.15*255, 0.55*255);
+    cv::Scalar rojo_high_2 = cv::Scalar(360/2, 0.45*255, 0.9*255);
+
+    cv::Scalar naranja_low = cv::Scalar(26/2, 0.25*255, 0.17*255);
+    cv::Scalar naranja_high = cv::Scalar(46/2, 0.85*255, 0.8*255);
+
+    cv::Scalar amarillo_low = cv::Scalar(48/2, 0.25*255, 0.50*255);
+    cv::Scalar amarillo_high = cv::Scalar(70/2, 0.99*255, 0.99*255);
+
+
+
+    //Para cada rango, obtenemos una imagen con solamente los pixels que se encuentran en ese rango
+    cv::Mat en_rango_rojo1, en_rango_rojo2, thresh_rojo, thresh_naranja, thresh_amarillo;
+    cv::inRange(img_hsv, rojo_low_1, rojo_high_1, en_rango_rojo1);
+    cv::inRange(img_hsv, rojo_low_2, rojo_high_2, en_rango_rojo2);
+    //cv::bitwise_or(en_rango_rojo1, en_rango_rojo2, cvMats[CVMAT_ROJO]);
+    cv::bitwise_or(en_rango_rojo1, en_rango_rojo2, thresh_rojo);
+    //cv::inRange(img_hsv, naranja_low, naranja_high, cvMats[CVMAT_NARANJA]);
+    cv::inRange(img_hsv, naranja_low, naranja_high, thresh_naranja);
+    //cv::inRange(img_hsv, amarillo_low, amarillo_high, cvMats[CVMAT_AMARILLO]);
+    cv::inRange(img_hsv, amarillo_low, amarillo_high, thresh_amarillo);
+
+    dst.push_back(thresh_rojo);
+    dst.push_back(thresh_naranja);
+    dst.push_back(thresh_amarillo);
+}
+
+
 cv::Mat MainWindow::procesar(cv::Mat &src)
 {
     //empezamos por corregir la perspectiva de la hoja
@@ -209,59 +252,46 @@ cv::Mat MainWindow::procesar(cv::Mat &src)
     cv::Mat filtered;
     cv::medianBlur(corrected,filtered,5);
     //aplicamos thresholds a la imagen para separar los colores que nos interesan
-    //esto es mas sencillo si utilizamos hsv
-    cv::Mat hsv_image;
-    cv::cvtColor(filtered, hsv_image, cv::COLOR_BGR2HSV);
-    //establecemos los rangos para cada color, dividimos por dos porque el rango va de 0 a 180, no a 360
-    int low_H_rojo1 = 0 / 2, high_H_rojo1 = 15 / 2 - 1;
-    int low_H_naranja = 28 / 2, high_H_naranja = 36 / 2 - 1;
-    int low_H_amarillo = 39 / 2, high_H_amarillo = 75 / 2 - 1;
-    int low_H_rojo2 = 290 / 2, high_H_rojo2 = 360 / 2;
-
-    //establecemos los rangos para el s y el v, esto nos sirve para que los blancos y negros no sean confundidos con algun color
-    int low_S = 60, high_S = 220; //max=255
-    int low_V = 60, high_V = 220; //max=255
-
-    //Para cada rango, obtenemos una imagen con solamente los pixels que se encuentran en ese rango
-    cv::Mat en_rango_rojo1, en_rango_rojo2, en_rango_rojo, en_rango_naranja, en_rango_amarillo;
-    cv::inRange(hsv_image, cv::Scalar(low_H_rojo1, 40, low_V), cv::Scalar(high_H_rojo1, high_S, high_V), en_rango_rojo1);
-    cv::inRange(hsv_image, cv::Scalar(low_H_rojo2, 40, low_V), cv::Scalar(high_H_rojo2, high_S, high_V), en_rango_rojo2);
-    cv::bitwise_or(en_rango_rojo1, en_rango_rojo2, en_rango_rojo);
-    cv::inRange(hsv_image, cv::Scalar(low_H_naranja, low_S, low_V), cv::Scalar(high_H_naranja, high_S, high_V), en_rango_naranja);
-    cv::inRange(hsv_image, cv::Scalar(low_H_amarillo, low_S, low_V), cv::Scalar(high_H_amarillo, high_S, high_V), en_rango_amarillo);
+    std::vector<cv::Mat> masks;
+    obtener_thresholds(corrected, masks);
+    cvMats[CVMAT_ROJO] = masks[0];
+    cvMats[CVMAT_NARANJA] = masks[1];
+    cvMats[CVMAT_AMARILLO] = masks[2];
 
     //aplicamos operaciones morfologicas (apertura + cierre) para eliminar imperfecciones
 
-    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5, 5));
-    cv::morphologyEx(en_rango_rojo, en_rango_rojo, cv::MORPH_OPEN, kernel);
-    cv::morphologyEx(en_rango_rojo, en_rango_rojo, cv::MORPH_CLOSE, kernel);
-    cv::morphologyEx(en_rango_naranja, en_rango_naranja, cv::MORPH_OPEN, kernel);
-    cv::morphologyEx(en_rango_naranja, en_rango_naranja, cv::MORPH_CLOSE, kernel);
-    cv::morphologyEx(en_rango_amarillo, en_rango_amarillo, cv::MORPH_OPEN, kernel);
-    cv::morphologyEx(en_rango_amarillo, en_rango_amarillo, cv::MORPH_CLOSE, kernel);
-
+    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(9, 9));
+    cv::morphologyEx(cvMats[CVMAT_ROJO], cvMats[CVMAT_ROJO], cv::MORPH_OPEN, kernel);
+    cv::morphologyEx(cvMats[CVMAT_ROJO], cvMats[CVMAT_ROJO], cv::MORPH_CLOSE, kernel);
+    cv::morphologyEx(cvMats[CVMAT_NARANJA], cvMats[CVMAT_NARANJA], cv::MORPH_OPEN, kernel);
+    cv::morphologyEx(cvMats[CVMAT_NARANJA], cvMats[CVMAT_NARANJA], cv::MORPH_CLOSE, kernel);
+    cv::morphologyEx(cvMats[CVMAT_AMARILLO], cvMats[CVMAT_AMARILLO], cv::MORPH_OPEN, kernel);
+    cv::morphologyEx(cvMats[CVMAT_AMARILLO], cvMats[CVMAT_AMARILLO], cv::MORPH_CLOSE, kernel);
+    cv::GaussianBlur(cvMats[CVMAT_ROJO],cvMats[CVMAT_ROJO],cv::Size(5,5),0);
+    cv::GaussianBlur(cvMats[CVMAT_NARANJA],cvMats[CVMAT_NARANJA],cv::Size(5,5),0);
+    cv::GaussianBlur(cvMats[CVMAT_AMARILLO],cvMats[CVMAT_AMARILLO],cv::Size(5,5),0);
 
     //aplicamos los thresholds como mascara a la imagen en escala de gris
     cv::Mat filtered_gray;
     cv::cvtColor(filtered,filtered_gray,cv::COLOR_BGR2GRAY);
-    cv::bitwise_and(filtered_gray,en_rango_rojo,thresholds[0]);
-    cv::bitwise_and(filtered_gray,en_rango_naranja,thresholds[1]);
-    cv::bitwise_and(filtered_gray,en_rango_amarillo,thresholds[2]);
+    cv::bitwise_and(filtered_gray,cvMats[CVMAT_ROJO],cvMats[CVMAT_ROJO]);
+    cv::bitwise_and(filtered_gray,cvMats[CVMAT_NARANJA],cvMats[CVMAT_NARANJA]);
+    cv::bitwise_and(filtered_gray,cvMats[CVMAT_AMARILLO],cvMats[CVMAT_AMARILLO]);
 
     //usamos el metodo de hough para encontrar circulos
     std::vector<cv::Vec3f> red_circles;
     std::vector<cv::Vec3f> orange_circles;
     std::vector<cv::Vec3f> yellow_circles;
-    int param1 = corrected.rows/8;
-    int param2 = 100;
-    int param3 = 20;
-    int param4 = 0; //minradius
-    int param5 = corrected.cols / 8; //maxradius
-    cv::HoughCircles(thresholds[0], red_circles, cv::HOUGH_GRADIENT, 1,
+    int param1 = (corrected.rows * ui->lbl_minDist->text().toInt())/100; //minDist
+    int param2 = ui->lbl_thresh->text().toInt(); //high thresh of the edge detector
+    int param3 = ui->lbl_acc->text().toInt(); //accumulator
+    int param4 = ui->lbl_minRad->text().toInt(); //minradius
+    int param5 = ui->lbl_maxRad->text().toInt(); //maxradius
+    cv::HoughCircles(cvMats[CVMAT_ROJO], red_circles, cv::HOUGH_GRADIENT, 1,
                      param1, // change this value to detect circles with different distances to each other
                      param2,param3,param4,param5); // change the last two parameters (min_radius & max_radius) to detect larger circles
-    cv::HoughCircles(thresholds[1], orange_circles, cv::HOUGH_GRADIENT, 1, param1,param2,param3,param4,param5);
-    cv::HoughCircles(thresholds[2], yellow_circles, cv::HOUGH_GRADIENT, 1, param1,param2,param3,param4,param5);
+    cv::HoughCircles(cvMats[CVMAT_NARANJA], orange_circles, cv::HOUGH_GRADIENT, 1, param1,param2,param3,param4,param5);
+    cv::HoughCircles(cvMats[CVMAT_AMARILLO], yellow_circles, cv::HOUGH_GRADIENT, 1, param1,param2,param3,param4,param5);
     //iteramos sobre los circulos encontrados para dibujar un circulo en la imagen original
     if (red_circles.size() > 0)
     {
@@ -328,11 +358,11 @@ void MainWindow::on_btn_load_clicked()
                                                     tr("Image (*.jpg);;Image (*.png);;All Files (*)"));
     if(!fileName.isEmpty())
     {
-        src = cv::imread(fileName.toStdString(),cv::IMREAD_UNCHANGED);
-        if(!src.empty())
+        cvMats[CVMAT_ORIGINAL] = cv::imread(fileName.toStdString(),cv::IMREAD_UNCHANGED);
+        if(!cvMats[CVMAT_ORIGINAL].empty())
         {
-            result = src.clone();
-            update_image(src);
+            cvMats[CVMAT_RESULT] = cvMats[CVMAT_ORIGINAL].clone();
+            update_image(cvMats[CVMAT_ORIGINAL]);
             ui->btn_procesar->setEnabled(true);
         }
     }
@@ -341,8 +371,8 @@ void MainWindow::on_btn_load_clicked()
 
 void MainWindow::on_btn_procesar_clicked()
 {
-    result = procesar(src);
-    update_image(result);
+    cvMats[CVMAT_RESULT] = procesar(cvMats[CVMAT_ORIGINAL]);
+    update_image(cvMats[CVMAT_RESULT]);
     ui->radioBtn_result->setEnabled(true);
     ui->radioBtn_rojo->setEnabled(true);
     ui->radioBtn_naranja->setEnabled(true);
@@ -355,25 +385,97 @@ void MainWindow::on_btn_save_clicked()
     QString filename = QFileDialog::getSaveFileName(this,
                                                     tr("Save Image"),"",
                                                     tr("jpg (*.jpg);;png (*.png);;All Files (*)"));
-    cv::imwrite(filename.toStdString(),result);
+    cv::imwrite(filename.toStdString(), cvMats[CVMAT_RESULT]);
 }
 
 void MainWindow::on_radioBtn_rojo_clicked()
 {
-    update_image(thresholds[0]);
+    update_image(cvMats[CVMAT_ROJO]);
 }
 
 void MainWindow::on_radioBtn_naranja_clicked()
 {
-    update_image(thresholds[1]);
+    update_image(cvMats[CVMAT_NARANJA]);
 }
 
 void MainWindow::on_radioBtn_amarillo_clicked()
 {
-    update_image(thresholds[2]);
+    update_image(cvMats[CVMAT_AMARILLO]);
 }
 
 void MainWindow::on_radioBtn_result_clicked()
 {
-    update_image(result);
+    update_image(cvMats[CVMAT_RESULT]);
+}
+
+void MainWindow::on_verticalSlider_minDist_valueChanged(int value)
+{
+    ui->lbl_minDist->setText(QString::number(value));
+}
+
+void MainWindow::on_verticalSlider_minRad_valueChanged(int value)
+{
+    ui->lbl_minRad->setText(QString::number(value));
+}
+
+void MainWindow::on_verticalSlider_maxRad_valueChanged(int value)
+{
+    ui->lbl_maxRad->setText(QString::number(value));
+}
+
+void MainWindow::on_verticalSlider_minDist_sliderReleased()
+{
+    if(ui->radioBtn_result->isEnabled())
+    {
+        cvMats[CVMAT_RESULT] = procesar(cvMats[CVMAT_ORIGINAL]);
+        update_image(cvMats[CVMAT_RESULT]);
+    }
+}
+
+void MainWindow::on_verticalSlider_minRad_sliderReleased()
+{
+    if(ui->radioBtn_result->isEnabled())
+    {
+        cvMats[CVMAT_RESULT] = procesar(cvMats[CVMAT_ORIGINAL]);
+        update_image(cvMats[CVMAT_RESULT]);
+    }
+}
+
+void MainWindow::on_verticalSlider_maxRad_sliderReleased()
+{
+    if(ui->radioBtn_result->isEnabled())
+    {
+        cvMats[CVMAT_RESULT] = procesar(cvMats[CVMAT_ORIGINAL]);
+        update_image(cvMats[CVMAT_RESULT]);
+    }
+}
+
+
+
+void MainWindow::on_verticalSlider_thresh_valueChanged(int value)
+{
+    ui->lbl_thresh->setText(QString::number(value));
+}
+
+void MainWindow::on_verticalSilder_acc_valueChanged(int value)
+{
+    ui->lbl_acc->setText(QString::number(value));
+}
+
+void MainWindow::on_verticalSlider_thresh_sliderReleased()
+{
+    if(ui->radioBtn_result->isEnabled())
+    {
+        cvMats[CVMAT_RESULT] = procesar(cvMats[CVMAT_ORIGINAL]);
+        update_image(cvMats[CVMAT_RESULT]);
+    }
+}
+
+void MainWindow::on_verticalSilder_acc_sliderReleased()
+{
+    if(ui->radioBtn_result->isEnabled())
+    {
+        cvMats[CVMAT_RESULT] = procesar(cvMats[CVMAT_ORIGINAL]);
+        update_image(cvMats[CVMAT_RESULT]);
+    }
 }
