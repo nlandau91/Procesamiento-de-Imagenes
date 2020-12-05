@@ -212,36 +212,37 @@ void MainWindow::obtener_thresholds(cv::Mat &src, std::vector<cv::Mat> &dst)
     //S va de 0 a 255
     //V va de 0 a 255
 
-    cv::Scalar rojo_low_1 = cv::Scalar(0/2, 0.15*255, 0.55*255);
-    cv::Scalar rojo_high_1 = cv::Scalar(25/2,0.45*255, 0.9*255);
+    cv::Scalar rosa_low_1 = cv::Scalar(0/2, 0.15*255, 0.55*255);
+    cv::Scalar rosa_high_1 = cv::Scalar(25/2,0.45*255, 0.9*255);
 
-    cv::Scalar rojo_low_2 = cv::Scalar(290/2, 0.15*255, 0.55*255);
-    cv::Scalar rojo_high_2 = cv::Scalar(360/2, 0.45*255, 0.9*255);
+    cv::Scalar rosa_low_2 = cv::Scalar(290/2, 0.15*255, 0.55*255);
+    cv::Scalar rosa_high_2 = cv::Scalar(360/2, 0.45*255, 0.9*255);
 
-    cv::Scalar naranja_low = cv::Scalar(26/2, 0.25*255, 0.17*255);
-    cv::Scalar naranja_high = cv::Scalar(46/2, 0.85*255, 0.8*255);
+    cv::Scalar naranja_low = cv::Scalar(20/2, 0.35*255, 0.5*255);
+    cv::Scalar naranja_high = cv::Scalar(36/2, 0.60*255, 0.80*255);
 
-    cv::Scalar amarillo_low = cv::Scalar(48/2, 0.25*255, 0.50*255);
+    cv::Scalar amarillo_low = cv::Scalar(40/2, 0.25*255, 0.50*255);
     cv::Scalar amarillo_high = cv::Scalar(70/2, 0.99*255, 0.99*255);
+
+    cv::Scalar chocolate_low = cv::Scalar(10/2, 0.30*255, 0.35*255);
+    cv::Scalar chocolate_high = cv::Scalar(25/2, 0.50*255, 0.55*255);
 
 
 
     //Para cada rango, obtenemos una imagen con solamente los pixels que se encuentran en ese rango
-    cv::Mat en_rango_rojo1, en_rango_rojo2, thresh_rojo, thresh_naranja, thresh_amarillo;
-    cv::inRange(img_hsv, rojo_low_1, rojo_high_1, en_rango_rojo1);
-    cv::inRange(img_hsv, rojo_low_2, rojo_high_2, en_rango_rojo2);
-    //cv::bitwise_or(en_rango_rojo1, en_rango_rojo2, cvMats[CVMAT_ROJO]);
-    cv::bitwise_or(en_rango_rojo1, en_rango_rojo2, thresh_rojo);
-    //cv::inRange(img_hsv, naranja_low, naranja_high, cvMats[CVMAT_NARANJA]);
+    cv::Mat en_rango_rosa1, en_rango_rosa2, thresh_rosa, thresh_naranja, thresh_amarillo, thresh_chocolate;
+    cv::inRange(img_hsv, rosa_low_1, rosa_high_1, en_rango_rosa1);
+    cv::inRange(img_hsv, rosa_low_2, rosa_high_2, en_rango_rosa2);
+    cv::bitwise_or(en_rango_rosa1, en_rango_rosa2, thresh_rosa);
     cv::inRange(img_hsv, naranja_low, naranja_high, thresh_naranja);
-    //cv::inRange(img_hsv, amarillo_low, amarillo_high, cvMats[CVMAT_AMARILLO]);
     cv::inRange(img_hsv, amarillo_low, amarillo_high, thresh_amarillo);
+    cv::inRange(img_hsv, chocolate_low, chocolate_high, thresh_chocolate);
 
-    dst.push_back(thresh_rojo);
+    dst.push_back(thresh_rosa);
     dst.push_back(thresh_naranja);
     dst.push_back(thresh_amarillo);
+    dst.push_back(thresh_chocolate);
 }
-
 
 cv::Mat MainWindow::procesar(cv::Mat &src)
 {
@@ -254,73 +255,90 @@ cv::Mat MainWindow::procesar(cv::Mat &src)
     //aplicamos thresholds a la imagen para separar los colores que nos interesan
     std::vector<cv::Mat> masks;
     obtener_thresholds(corrected, masks);
-    cvMats[CVMAT_ROJO] = masks[0];
+    cvMats[CVMAT_ROSA] = masks[0];
     cvMats[CVMAT_NARANJA] = masks[1];
     cvMats[CVMAT_AMARILLO] = masks[2];
+    cvMats[CVMAT_CHOCOLATE] = masks[3];
 
     //aplicamos operaciones morfologicas (apertura + cierre) para eliminar imperfecciones
 
     cv::Mat kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(9, 9));
-    cv::morphologyEx(cvMats[CVMAT_ROJO], cvMats[CVMAT_ROJO], cv::MORPH_OPEN, kernel);
-    cv::morphologyEx(cvMats[CVMAT_ROJO], cvMats[CVMAT_ROJO], cv::MORPH_CLOSE, kernel);
+    cv::morphologyEx(cvMats[CVMAT_ROSA], cvMats[CVMAT_ROSA], cv::MORPH_OPEN, kernel);
+    cv::morphologyEx(cvMats[CVMAT_ROSA], cvMats[CVMAT_ROSA], cv::MORPH_CLOSE, kernel);
     cv::morphologyEx(cvMats[CVMAT_NARANJA], cvMats[CVMAT_NARANJA], cv::MORPH_OPEN, kernel);
     cv::morphologyEx(cvMats[CVMAT_NARANJA], cvMats[CVMAT_NARANJA], cv::MORPH_CLOSE, kernel);
     cv::morphologyEx(cvMats[CVMAT_AMARILLO], cvMats[CVMAT_AMARILLO], cv::MORPH_OPEN, kernel);
     cv::morphologyEx(cvMats[CVMAT_AMARILLO], cvMats[CVMAT_AMARILLO], cv::MORPH_CLOSE, kernel);
-    cv::GaussianBlur(cvMats[CVMAT_ROJO],cvMats[CVMAT_ROJO],cv::Size(5,5),0);
+    cv::morphologyEx(cvMats[CVMAT_CHOCOLATE], cvMats[CVMAT_CHOCOLATE], cv::MORPH_OPEN, kernel);
+    cv::morphologyEx(cvMats[CVMAT_CHOCOLATE], cvMats[CVMAT_CHOCOLATE], cv::MORPH_CLOSE, kernel);
+    cv::GaussianBlur(cvMats[CVMAT_ROSA],cvMats[CVMAT_ROSA],cv::Size(5,5),0);
     cv::GaussianBlur(cvMats[CVMAT_NARANJA],cvMats[CVMAT_NARANJA],cv::Size(5,5),0);
     cv::GaussianBlur(cvMats[CVMAT_AMARILLO],cvMats[CVMAT_AMARILLO],cv::Size(5,5),0);
+    cv::GaussianBlur(cvMats[CVMAT_CHOCOLATE],cvMats[CVMAT_CHOCOLATE],cv::Size(5,5),0);
 
     //aplicamos los thresholds como mascara a la imagen en escala de gris
     cv::Mat filtered_gray;
     cv::cvtColor(filtered,filtered_gray,cv::COLOR_BGR2GRAY);
-    cv::bitwise_and(filtered_gray,cvMats[CVMAT_ROJO],cvMats[CVMAT_ROJO]);
+    cv::bitwise_and(filtered_gray,cvMats[CVMAT_ROSA],cvMats[CVMAT_ROSA]);
     cv::bitwise_and(filtered_gray,cvMats[CVMAT_NARANJA],cvMats[CVMAT_NARANJA]);
     cv::bitwise_and(filtered_gray,cvMats[CVMAT_AMARILLO],cvMats[CVMAT_AMARILLO]);
+    cv::bitwise_and(filtered_gray,cvMats[CVMAT_CHOCOLATE],cvMats[CVMAT_CHOCOLATE]);
 
     //usamos el metodo de hough para encontrar circulos
-    std::vector<cv::Vec3f> red_circles;
-    std::vector<cv::Vec3f> orange_circles;
-    std::vector<cv::Vec3f> yellow_circles;
+    std::vector<cv::Vec3f> circulos_rosa;
+    std::vector<cv::Vec3f> circulos_naranja;
+    std::vector<cv::Vec3f> circulos_amarillo;
+    std::vector<cv::Vec3f> circulos_chocolate;
     int param1 = (corrected.rows * ui->lbl_minDist->text().toInt())/100; //minDist
     int param2 = ui->lbl_thresh->text().toInt(); //high thresh of the edge detector
     int param3 = ui->lbl_acc->text().toInt(); //accumulator
     int param4 = ui->lbl_minRad->text().toInt(); //minradius
     int param5 = ui->lbl_maxRad->text().toInt(); //maxradius
-    cv::HoughCircles(cvMats[CVMAT_ROJO], red_circles, cv::HOUGH_GRADIENT, 1,
+    cv::HoughCircles(cvMats[CVMAT_ROSA], circulos_rosa, cv::HOUGH_GRADIENT, 1,
                      param1, // change this value to detect circles with different distances to each other
                      param2,param3,param4,param5); // change the last two parameters (min_radius & max_radius) to detect larger circles
-    cv::HoughCircles(cvMats[CVMAT_NARANJA], orange_circles, cv::HOUGH_GRADIENT, 1, param1,param2,param3,param4,param5);
-    cv::HoughCircles(cvMats[CVMAT_AMARILLO], yellow_circles, cv::HOUGH_GRADIENT, 1, param1,param2,param3,param4,param5);
+    cv::HoughCircles(cvMats[CVMAT_NARANJA], circulos_naranja, cv::HOUGH_GRADIENT, 1, param1,param2,param3,param4,param5);
+    cv::HoughCircles(cvMats[CVMAT_AMARILLO], circulos_amarillo, cv::HOUGH_GRADIENT, 1, param1,param2,param3,param4,param5);
+    cv::HoughCircles(cvMats[CVMAT_CHOCOLATE], circulos_chocolate, cv::HOUGH_GRADIENT, 1, param1,param2,param3,param4,param5);
     //iteramos sobre los circulos encontrados para dibujar un circulo en la imagen original
-    if (red_circles.size() > 0)
+    if (circulos_rosa.size() > 0)
     {
-        for (size_t current_circle = 0; current_circle < red_circles.size(); ++current_circle)
+        for (size_t current_circle = 0; current_circle < circulos_rosa.size(); ++current_circle)
         {
-            cv::Point center(std::round(red_circles[current_circle][0]), std::round(red_circles[current_circle][1]));
-            int radius = std::round(red_circles[current_circle][2]);
+            cv::Point center(std::round(circulos_rosa[current_circle][0]), std::round(circulos_rosa[current_circle][1]));
+            int radius = std::round(circulos_rosa[current_circle][2]);
 
             cv::circle(corrected, center, radius, cv::Scalar(181,113,255,255), 5);
         }
     }
-    if (orange_circles.size() > 0)
+    if (circulos_naranja.size() > 0)
     {
-        for (size_t current_circle = 0; current_circle < orange_circles.size(); ++current_circle)
+        for (size_t current_circle = 0; current_circle < circulos_naranja.size(); ++current_circle)
         {
-            cv::Point center(std::round(orange_circles[current_circle][0]), std::round(orange_circles[current_circle][1]));
-            int radius = std::round(orange_circles[current_circle][2]);
+            cv::Point center(std::round(circulos_naranja[current_circle][0]), std::round(circulos_naranja[current_circle][1]));
+            int radius = std::round(circulos_naranja[current_circle][2]);
 
             cv::circle(corrected, center, radius, cv::Scalar(16,64,180,255), 5);
         }
     }
-    if (yellow_circles.size() > 0)
+    if (circulos_amarillo.size() > 0)
     {
-        for (size_t current_circle = 0; current_circle < yellow_circles.size(); ++current_circle)
+        for (size_t current_circle = 0; current_circle < circulos_amarillo.size(); ++current_circle)
         {
-            cv::Point center(std::round(yellow_circles[current_circle][0]), std::round(yellow_circles[current_circle][1]));
-            int radius = std::round(yellow_circles[current_circle][2]);
+            cv::Point center(std::round(circulos_amarillo[current_circle][0]), std::round(circulos_amarillo[current_circle][1]));
+            int radius = std::round(circulos_amarillo[current_circle][2]);
 
             cv::circle(corrected, center, radius, cv::Scalar(0,255,255,255), 5);
+        }
+    }
+    if (circulos_chocolate.size() > 0)
+    {
+        for (size_t current_circle = 0; current_circle < circulos_chocolate.size(); ++current_circle)
+        {
+            cv::Point center(std::round(circulos_chocolate[current_circle][0]), std::round(circulos_chocolate[current_circle][1]));
+            int radius = std::round(circulos_chocolate[current_circle][2]);
+
+            cv::circle(corrected, center, radius, cv::Scalar(18,52,98,255),5);
         }
     }
     return corrected;
@@ -345,7 +363,7 @@ void MainWindow::resetUi()
     ui->btn_save->setDisabled(true);
     ui->radioBtn_amarillo->setDisabled(true);
     ui->radioBtn_naranja->setDisabled(true);
-    ui->radioBtn_rojo->setDisabled(true);
+    ui->radioBtn_rosa->setDisabled(true);
     ui->radioBtn_result->setDisabled(true);
     ui->radioBtn_result->setChecked(true);
 }
@@ -374,7 +392,7 @@ void MainWindow::on_btn_procesar_clicked()
     cvMats[CVMAT_RESULT] = procesar(cvMats[CVMAT_ORIGINAL]);
     update_image(cvMats[CVMAT_RESULT]);
     ui->radioBtn_result->setEnabled(true);
-    ui->radioBtn_rojo->setEnabled(true);
+    ui->radioBtn_rosa->setEnabled(true);
     ui->radioBtn_naranja->setEnabled(true);
     ui->radioBtn_amarillo->setEnabled(true);
     ui->btn_save->setEnabled(true);
@@ -388,9 +406,9 @@ void MainWindow::on_btn_save_clicked()
     cv::imwrite(filename.toStdString(), cvMats[CVMAT_RESULT]);
 }
 
-void MainWindow::on_radioBtn_rojo_clicked()
+void MainWindow::on_radioBtn_rosa_clicked()
 {
-    update_image(cvMats[CVMAT_ROJO]);
+    update_image(cvMats[CVMAT_ROSA]);
 }
 
 void MainWindow::on_radioBtn_naranja_clicked()
@@ -450,8 +468,6 @@ void MainWindow::on_verticalSlider_maxRad_sliderReleased()
     }
 }
 
-
-
 void MainWindow::on_verticalSlider_thresh_valueChanged(int value)
 {
     ui->lbl_thresh->setText(QString::number(value));
@@ -478,4 +494,9 @@ void MainWindow::on_verticalSilder_acc_sliderReleased()
         cvMats[CVMAT_RESULT] = procesar(cvMats[CVMAT_ORIGINAL]);
         update_image(cvMats[CVMAT_RESULT]);
     }
+}
+
+void MainWindow::on_radioBtn_chocolate_clicked()
+{
+    update_image(cvMats[CVMAT_CHOCOLATE]);
 }

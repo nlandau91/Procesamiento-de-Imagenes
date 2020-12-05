@@ -14,9 +14,10 @@ class MainWindow : public QMainWindow
     Q_OBJECT
     enum cvMats{
         CVMAT_ORIGINAL,
-        CVMAT_ROJO,
+        CVMAT_ROSA,
         CVMAT_NARANJA,
         CVMAT_AMARILLO,
+        CVMAT_CHOCOLATE,
         CVMAT_RESULT,
         CVMAT_ACTUAL
     };
@@ -31,8 +32,6 @@ private slots:
     void on_btn_procesar_clicked();
 
     void on_btn_save_clicked();
-
-    void on_radioBtn_rojo_clicked();
 
     void on_radioBtn_naranja_clicked();
 
@@ -59,6 +58,10 @@ private slots:
     void on_verticalSlider_thresh_sliderReleased();
 
     void on_verticalSilder_acc_sliderReleased();
+
+    void on_radioBtn_chocolate_clicked();
+
+    void on_radioBtn_rosa_clicked();
 
 private:
     Ui::MainWindow *ui;

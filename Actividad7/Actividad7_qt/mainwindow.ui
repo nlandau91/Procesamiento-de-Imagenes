@@ -238,12 +238,12 @@
          </widget>
         </item>
         <item>
-         <widget class="QRadioButton" name="radioBtn_rojo">
+         <widget class="QRadioButton" name="radioBtn_rosa">
           <property name="enabled">
            <bool>false</bool>
           </property>
           <property name="text">
-           <string>Rojo</string>
+           <string>Rosa</string>
           </property>
          </widget>
         </item>
@@ -254,6 +254,13 @@
           </property>
           <property name="text">
            <string>Naranja</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="radioBtn_chocolate">
+          <property name="text">
+           <string>Chocolate</string>
           </property>
          </widget>
         </item>
