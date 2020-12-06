@@ -2,7 +2,7 @@
 #include "ui_mainwindow.h"
 #include <QFileDialog>
 
-inline QImage  cvMatToQImage( const cv::Mat &inMat )
+inline QImage cvMatToQImage( const cv::Mat &inMat )
 {
     switch ( inMat.type() )
     {
@@ -193,7 +193,7 @@ cv::Mat corregirPerspectiva(cv::Mat &src)
     return transformed;
 }
 
-void MainWindow::obtener_thresholds(cv::Mat &src, std::vector<cv::Mat> &dst)
+void obtener_thresholds(cv::Mat &src, std::vector<cv::Mat> &dst)
 {
     //la convertimos a hsv, ya que es mas facil diferenciar colores
     cv::Mat img_hsv;
@@ -217,7 +217,7 @@ void MainWindow::obtener_thresholds(cv::Mat &src, std::vector<cv::Mat> &dst)
     cv::Scalar amarillo_high = cv::Scalar(70/2, 0.99*255, 1.00*255);
 
     cv::Scalar chocolate_low = cv::Scalar(10/2, 0.30*255, 0.35*255);
-    cv::Scalar chocolate_high = cv::Scalar(25/2, 0.60*255, 0.60*255);
+    cv::Scalar chocolate_high = cv::Scalar(22/2, 0.60*255, 0.60*255);
 
 
 
@@ -231,7 +231,7 @@ void MainWindow::obtener_thresholds(cv::Mat &src, std::vector<cv::Mat> &dst)
     cv::inRange(img_hsv, chocolate_low, chocolate_high, thresh_chocolate);
 
     //filtramos y limpiamos las imagenes
-    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(9, 9));
+    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(7, 7));
     cv::morphologyEx(thresh_rosa, thresh_rosa, cv::MORPH_OPEN, kernel);
     cv::morphologyEx(thresh_rosa, thresh_rosa, cv::MORPH_CLOSE, kernel);
     cv::morphologyEx(thresh_naranja, thresh_naranja, cv::MORPH_OPEN, kernel);
@@ -359,19 +359,16 @@ cv::Mat MainWindow::procesar(cv::Mat &src)
 
     //usamos el metodo de hough para encontrar circulos
     std::vector<cv::Vec3f> circulos_rosa,circulos_naranja,circulos_amarillo,circulos_chocolate;
+    double dp = ui->lbl_dp->text().toDouble();
     int param1 = (corrected.rows * ui->lbl_minDist->text().toInt())/100; //minDist distancia minima entre circulos
     int param2 = ui->lbl_thresh->text().toInt(); //high thresh of the edge detector
     int param3 = ui->lbl_acc->text().toInt(); //accumulator
     int param4 = ui->lbl_minRad->text().toInt(); //minradius
     int param5 = ui->lbl_maxRad->text().toInt(); //maxradius
     cv::HoughCircles(cvMats[CVMAT_ROSA], circulos_rosa, cv::HOUGH_GRADIENT, 1,param1, param2,param3,param4,param5);
-    //cvCircles[CVCIRCLE_ROSA] = circulos_rosa;
     cv::HoughCircles(cvMats[CVMAT_NARANJA], circulos_naranja, cv::HOUGH_GRADIENT, 1, param1,param2,param3,param4,param5);
-    //cvCircles[CVCIRCLE_NARANJA] = circulos_naranja;
     cv::HoughCircles(cvMats[CVMAT_AMARILLO], circulos_amarillo, cv::HOUGH_GRADIENT, 1, param1,param2,param3,param4,param5);
-    //cvCircles[CVCIRCLE_AMARILLO] = circulos_amarillo;
     cv::HoughCircles(cvMats[CVMAT_CHOCOLATE], circulos_chocolate, cv::HOUGH_GRADIENT, 1, param1,param2,param3,param4,param5);
-    //cvCircles[CVCIRCLE_CHOCOLATE] = circulos_chocolate;
 
     //intentamos remover falsos positivos y marcar pedazos rotos
     //para esto, encontramos todos los contornos y luego vemos que contorno no pertenece a ningun circulo previamente encontrado
@@ -393,13 +390,13 @@ cv::Mat MainWindow::procesar(cv::Mat &src)
     confirmados.insert(confirmados.end(),cvCircles[CVCIRCLE_CHOCOLATE].begin(),cvCircles[CVCIRCLE_CHOCOLATE].end());
     rotas = detectarRotas(confirmados,contours);
 
-    //iteramos sobre los circulos encontrados para dibujar un circulo en la imagen original
+    //dibujamos los circulos correspondientes a las galletas
     pintarCirculos(corrected, cvCircles[CVCIRCLE_ROSA], cvColors[CVCOLOR_ROSA]);
     pintarCirculos(corrected, cvCircles[CVCIRCLE_NARANJA], cvColors[CVCOLOR_NARANJA]);
     pintarCirculos(corrected, cvCircles[CVCIRCLE_AMARILLO], cvColors[CVCOLOR_AMARILLO]);
     pintarCirculos(corrected, cvCircles[CVCIRCLE_CHOCOLATE], cvColors[CVCOLOR_CHOCOLATE]);
 
-    //iteramos sobre los puntos detectados como pedazos rotos
+    //dibujamos los puntos detectados como pedazos rotos
     for(cv::Point p : rotas)
     {
         cv::drawMarker(corrected,p,cv::Scalar(255,0,0,255));
@@ -438,7 +435,7 @@ void MainWindow::on_btn_load_clicked()
     resetUi();
     QString fileName = QFileDialog::getOpenFileName(this,
                                                     tr("Open Image"), "",
-                                                    tr("Image (*.jpg);;Image (*.png);;All Files (*)"));
+                                                    tr("Images (*.jpg *.jpeg *.jpe *.jp2 *.png *.bmp *.dib);;All Files (*)"));
     if(!fileName.isEmpty())
     {
         cvMats[CVMAT_ORIGINAL] = cv::imread(fileName.toStdString(),cv::IMREAD_UNCHANGED);
@@ -573,4 +570,18 @@ void MainWindow::on_verticalSilder_acc_sliderReleased()
 void MainWindow::on_radioBtn_chocolate_clicked()
 {
     update_image(cvMats[CVMAT_CHOCOLATE]);
+}
+
+void MainWindow::on_verticalSlider_dp_sliderReleased()
+{
+    if(ui->radioBtn_result->isEnabled())
+    {
+        cvMats[CVMAT_RESULT] = procesar(cvMats[CVMAT_ORIGINAL]);
+        update_image(cvMats[CVMAT_RESULT]);
+    }
+}
+
+void MainWindow::on_verticalSlider_dp_valueChanged(int value)
+{
+     ui->lbl_dp->setText(QString::number(value/10.));
 }

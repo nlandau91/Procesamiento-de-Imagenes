@@ -15,7 +15,7 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
+    <item row="0" column="1">
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
        <layout class="QVBoxLayout" name="verticalLayout">
@@ -36,194 +36,6 @@
           </property>
          </widget>
         </item>
-        <item>
-         <widget class="QPushButton" name="btn_save">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="text">
-           <string>guardar</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QVBoxLayout" name="verticalLayout_3">
-        <item>
-         <widget class="QLabel" name="label_6">
-          <property name="text">
-           <string>minDist</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QSlider" name="verticalSlider_minDist">
-          <property name="minimum">
-           <number>1</number>
-          </property>
-          <property name="maximum">
-           <number>100</number>
-          </property>
-          <property name="value">
-           <number>8</number>
-          </property>
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="lbl_minDist">
-          <property name="text">
-           <string>8</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QVBoxLayout" name="verticalLayout_4">
-        <item>
-         <widget class="QLabel" name="label_7">
-          <property name="text">
-           <string>minRad</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QSlider" name="verticalSlider_minRad">
-          <property name="maximum">
-           <number>999</number>
-          </property>
-          <property name="value">
-           <number>0</number>
-          </property>
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="lbl_minRad">
-          <property name="text">
-           <string>0</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QVBoxLayout" name="verticalLayout_5">
-        <item>
-         <widget class="QLabel" name="label_8">
-          <property name="text">
-           <string>maxRad</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QSlider" name="verticalSlider_maxRad">
-          <property name="maximum">
-           <number>999</number>
-          </property>
-          <property name="value">
-           <number>0</number>
-          </property>
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="lbl_maxRad">
-          <property name="text">
-           <string>0</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QVBoxLayout" name="verticalLayout_6">
-        <item>
-         <widget class="QLabel" name="label">
-          <property name="text">
-           <string>thresh</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QSlider" name="verticalSlider_thresh">
-          <property name="minimum">
-           <number>1</number>
-          </property>
-          <property name="maximum">
-           <number>999</number>
-          </property>
-          <property name="value">
-           <number>100</number>
-          </property>
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="lbl_thresh">
-          <property name="text">
-           <string>100</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QVBoxLayout" name="verticalLayout_7">
-        <item>
-         <widget class="QLabel" name="label_2">
-          <property name="text">
-           <string>acc</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QSlider" name="verticalSilder_acc">
-          <property name="maximum">
-           <number>999</number>
-          </property>
-          <property name="value">
-           <number>20</number>
-          </property>
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="lbl_acc">
-          <property name="text">
-           <string>20</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <widget class="QLabel" name="lbl_img">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
          <widget class="QRadioButton" name="radioBtn_result">
           <property name="enabled">
@@ -276,6 +88,245 @@
            <string>Amarillo</string>
           </property>
          </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btn_save">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>guardar</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QLabel" name="lbl_img">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_8">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_13">
+            <item>
+             <widget class="QLabel" name="label_6">
+              <property name="text">
+               <string>minDist</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="verticalSlider_minDist">
+              <property name="minimum">
+               <number>1</number>
+              </property>
+              <property name="maximum">
+               <number>100</number>
+              </property>
+              <property name="value">
+               <number>8</number>
+              </property>
+              <property name="tracking">
+               <bool>true</bool>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="invertedAppearance">
+               <bool>false</bool>
+              </property>
+              <property name="invertedControls">
+               <bool>false</bool>
+              </property>
+              <property name="tickPosition">
+               <enum>QSlider::NoTicks</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="lbl_minDist">
+              <property name="text">
+               <string>8</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_15">
+            <item>
+             <widget class="QLabel" name="label_7">
+              <property name="text">
+               <string>minRad</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="verticalSlider_minRad">
+              <property name="maximum">
+               <number>999</number>
+              </property>
+              <property name="value">
+               <number>0</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="lbl_minRad">
+              <property name="text">
+               <string>0</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_16">
+            <item>
+             <widget class="QLabel" name="label_8">
+              <property name="text">
+               <string>maxRad</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="verticalSlider_maxRad">
+              <property name="maximum">
+               <number>999</number>
+              </property>
+              <property name="value">
+               <number>0</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="lbl_maxRad">
+              <property name="text">
+               <string>0</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_2">
+            <item>
+             <widget class="QLabel" name="label_3">
+              <property name="text">
+               <string>dp</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="verticalSlider_dp">
+              <property name="minimum">
+               <number>1</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="lbl_dp">
+              <property name="text">
+               <string>1</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_14">
+            <item>
+             <widget class="QLabel" name="label">
+              <property name="text">
+               <string>thresh</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="verticalSlider_thresh">
+              <property name="minimum">
+               <number>1</number>
+              </property>
+              <property name="maximum">
+               <number>999</number>
+              </property>
+              <property name="value">
+               <number>100</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="lbl_thresh">
+              <property name="text">
+               <string>100</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_4">
+            <item>
+             <widget class="QLabel" name="label_2">
+              <property name="text">
+               <string>acc</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="verticalSilder_acc">
+              <property name="minimum">
+               <number>1</number>
+              </property>
+              <property name="maximum">
+               <number>999</number>
+              </property>
+              <property name="value">
+               <number>20</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="lbl_acc">
+              <property name="text">
+               <string>20</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
         </item>
        </layout>
       </item>

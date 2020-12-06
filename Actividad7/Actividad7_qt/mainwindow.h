@@ -75,6 +75,10 @@ private slots:
 
     void on_radioBtn_rosa_clicked();
 
+    void on_verticalSlider_dp_sliderReleased();
+
+    void on_verticalSlider_dp_valueChanged(int value);
+
 private:
     Ui::MainWindow *ui;
     cv::Mat cvMats[7];
@@ -85,7 +89,6 @@ private:
     void update_image(cv::Mat &newMat);
     void resizeEvent(QResizeEvent *event);
     cv::Mat procesar(cv::Mat &src);
-    void obtener_thresholds(cv::Mat &src, std::vector<cv::Mat> &dst);
     void resetUi();
 
 };
