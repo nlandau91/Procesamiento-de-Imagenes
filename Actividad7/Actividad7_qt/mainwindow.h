@@ -87,6 +87,7 @@ private:
     cv::Scalar cvColors[4] = {cv::Scalar(181,113,255,255),cv::Scalar(16,64,180,255),cv::Scalar(0,255,255,255),cv::Scalar(18,52,98,255)};
 
     void update_image(cv::Mat &newMat);
+    void update_image();
     void resizeEvent(QResizeEvent *event);
     cv::Mat procesar(cv::Mat &src);
     void resetUi();

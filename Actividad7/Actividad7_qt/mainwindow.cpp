@@ -50,24 +50,31 @@ inline QPixmap cvMatToQPixmap( const cv::Mat &inMat )
 
 void MainWindow::update_image(cv::Mat &newMat)
 {
-    int w =  ui->lbl_img->width();
-    int h =  ui->lbl_img->height();
+    int w =  ui->frame_img->width();
+    int h =  ui->frame_img->height();
+    ui->lbl_img->setFixedHeight(h);
+    ui->lbl_img->setFixedWidth(w);
     cvMats[CVMAT_ACTUAL] = newMat;
     ui->lbl_img->setPixmap(cvMatToQPixmap(newMat).scaled(w,h,Qt::KeepAspectRatio));
-    //ui->lbl_img->setScaledContents(true);
-    //ui->lbl_img->setSizePolicy((QSizePolicy::Ignored,QSizePolicy::Ignored));
+}
+
+void MainWindow::update_image()
+{
+    if(!cvMats[CVMAT_ACTUAL].empty())
+    {
+        int w =  ui->frame_img->width();
+        int h =  ui->frame_img->height();
+        ui->lbl_img->setFixedHeight(h);
+        ui->lbl_img->setFixedWidth(w);
+        ui->lbl_img->setPixmap(cvMatToQPixmap(cvMats[CVMAT_ACTUAL]).scaled(w,h,Qt::KeepAspectRatio));
+    }
+
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event)
 {
     Q_UNUSED(event);
-    //int h = event->size().height();
-    //int w = event->size().width();
-    //std::cout << "h: " << h << "w: " << w <<std::endl;
-    if(ui->radioBtn_result->isEnabled())
-    {
-        update_image(cvMats[CVMAT_ACTUAL]);
-    }
+    update_image();
 }
 
 //corrige la perspectiva de una imagen
@@ -265,8 +272,7 @@ void pintarCirculos(cv::InputOutputArray &src, std::vector<cv::Vec3f> &circulos,
     }
 }
 
-bool isInside(int circle_x, int circle_y,
-              int rad, int x, int y)
+bool isInside(int circle_x, int circle_y, int rad, int x, int y)
 {
     // Compare radius of circle with distance
     // of its center from given point
@@ -359,16 +365,21 @@ cv::Mat MainWindow::procesar(cv::Mat &src)
 
     //usamos el metodo de hough para encontrar circulos
     std::vector<cv::Vec3f> circulos_rosa,circulos_naranja,circulos_amarillo,circulos_chocolate;
-    double dp = ui->lbl_dp->text().toDouble();
-    int param1 = (corrected.rows * ui->lbl_minDist->text().toInt())/100; //minDist distancia minima entre circulos
-    int param2 = ui->lbl_thresh->text().toInt(); //high thresh of the edge detector
-    int param3 = ui->lbl_acc->text().toInt(); //accumulator
-    int param4 = ui->lbl_minRad->text().toInt(); //minradius
-    int param5 = ui->lbl_maxRad->text().toInt(); //maxradius
-    cv::HoughCircles(cvMats[CVMAT_ROSA], circulos_rosa, cv::HOUGH_GRADIENT, 1,param1, param2,param3,param4,param5);
-    cv::HoughCircles(cvMats[CVMAT_NARANJA], circulos_naranja, cv::HOUGH_GRADIENT, 1, param1,param2,param3,param4,param5);
-    cv::HoughCircles(cvMats[CVMAT_AMARILLO], circulos_amarillo, cv::HOUGH_GRADIENT, 1, param1,param2,param3,param4,param5);
-    cv::HoughCircles(cvMats[CVMAT_CHOCOLATE], circulos_chocolate, cv::HOUGH_GRADIENT, 1, param1,param2,param3,param4,param5);
+
+    double dp = ui->lbl_dp->text().toDouble();  //Resolution of the accumulator array. Votes cast are binned into squares set by dp size.
+                                                //Set too small and only perfect circles are found, set too high and noise collaborates to vote for non-circles.
+    int minDist = (corrected.rows * ui->lbl_minDist->text().toInt())/100; //Minimum distance between the center (x, y) coordinates of detected circles.
+    int param1 = ui->lbl_thresh->text().toInt(); //high thresh of the canny edge detector
+    int param2 = ui->lbl_acc->text().toInt();   //Accumulator threshold value for the cv2.HOUGH_GRADIENT method.
+                                                //The smaller the threshold is, the more circles will be detected (including false circles).
+                                                //The larger the threshold is, the more circles will potentially be returned.
+    int minRadius = ui->lbl_minRad->text().toInt(); //Minimum size of the radius in pixels.
+    int maxRadius = ui->lbl_maxRad->text().toInt(); //Maximum size of the radius in pixels.
+
+    cv::HoughCircles(cvMats[CVMAT_ROSA], circulos_rosa, cv::HOUGH_GRADIENT, dp, minDist, param1, param2, minRadius, maxRadius);
+    cv::HoughCircles(cvMats[CVMAT_NARANJA], circulos_naranja, cv::HOUGH_GRADIENT, dp, minDist, param1,param2, minRadius, maxRadius);
+    cv::HoughCircles(cvMats[CVMAT_AMARILLO], circulos_amarillo, cv::HOUGH_GRADIENT, dp, minDist, param1,param2, minRadius, maxRadius);
+    cv::HoughCircles(cvMats[CVMAT_CHOCOLATE], circulos_chocolate, cv::HOUGH_GRADIENT, dp, minDist, param1,param2, minRadius, maxRadius);
 
     //intentamos remover falsos positivos y marcar pedazos rotos
     //para esto, encontramos todos los contornos y luego vemos que contorno no pertenece a ningun circulo previamente encontrado
@@ -399,7 +410,7 @@ cv::Mat MainWindow::procesar(cv::Mat &src)
     //dibujamos los puntos detectados como pedazos rotos
     for(cv::Point p : rotas)
     {
-        cv::drawMarker(corrected,p,cv::Scalar(255,0,0,255));
+        cv::drawMarker(corrected,p,cv::Scalar(255,0,0,255),cv::MARKER_CROSS,20,2);
     }
 
     return corrected;

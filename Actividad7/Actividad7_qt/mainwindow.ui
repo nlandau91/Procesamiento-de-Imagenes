@@ -102,16 +102,41 @@
        </layout>
       </item>
       <item>
-       <widget class="QLabel" name="lbl_img">
+       <widget class="QFrame" name="frame_img">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
-        <property name="text">
-         <string/>
+        <property name="frameShape">
+         <enum>QFrame::StyledPanel</enum>
         </property>
+        <property name="frameShadow">
+         <enum>QFrame::Raised</enum>
+        </property>
+        <widget class="QLabel" name="lbl_img">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>0</y>
+           <width>331</width>
+           <height>351</height>
+          </rect>
+         </property>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="autoFillBackground">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
        </widget>
       </item>
       <item>
@@ -127,7 +152,7 @@
               </property>
              </widget>
             </item>
-            <item>
+            <item alignment="Qt::AlignHCenter">
              <widget class="QSlider" name="verticalSlider_minDist">
               <property name="minimum">
                <number>1</number>
@@ -160,6 +185,12 @@
               <property name="text">
                <string>8</string>
               </property>
+              <property name="scaledContents">
+               <bool>false</bool>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
              </widget>
             </item>
            </layout>
@@ -173,7 +204,7 @@
               </property>
              </widget>
             </item>
-            <item>
+            <item alignment="Qt::AlignHCenter">
              <widget class="QSlider" name="verticalSlider_minRad">
               <property name="maximum">
                <number>999</number>
@@ -191,6 +222,9 @@
               <property name="text">
                <string>0</string>
               </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
              </widget>
             </item>
            </layout>
@@ -204,7 +238,7 @@
               </property>
              </widget>
             </item>
-            <item>
+            <item alignment="Qt::AlignHCenter">
              <widget class="QSlider" name="verticalSlider_maxRad">
               <property name="maximum">
                <number>999</number>
@@ -222,6 +256,9 @@
               <property name="text">
                <string>0</string>
               </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
              </widget>
             </item>
            </layout>
@@ -232,27 +269,30 @@
          <layout class="QHBoxLayout" name="horizontalLayout_2">
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_2">
-            <item>
+            <item alignment="Qt::AlignHCenter">
              <widget class="QLabel" name="label_3">
               <property name="text">
                <string>dp</string>
               </property>
              </widget>
             </item>
-            <item>
+            <item alignment="Qt::AlignHCenter">
              <widget class="QSlider" name="verticalSlider_dp">
               <property name="minimum">
-               <number>1</number>
+               <number>10</number>
               </property>
               <property name="orientation">
                <enum>Qt::Vertical</enum>
               </property>
              </widget>
             </item>
-            <item>
+            <item alignment="Qt::AlignHCenter">
              <widget class="QLabel" name="lbl_dp">
               <property name="text">
-               <string>1</string>
+               <string>1.00</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
               </property>
              </widget>
             </item>
@@ -267,7 +307,7 @@
               </property>
              </widget>
             </item>
-            <item>
+            <item alignment="Qt::AlignHCenter">
              <widget class="QSlider" name="verticalSlider_thresh">
               <property name="minimum">
                <number>1</number>
@@ -288,6 +328,9 @@
               <property name="text">
                <string>100</string>
               </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
              </widget>
             </item>
            </layout>
@@ -301,7 +344,7 @@
               </property>
              </widget>
             </item>
-            <item>
+            <item alignment="Qt::AlignHCenter">
              <widget class="QSlider" name="verticalSilder_acc">
               <property name="minimum">
                <number>1</number>
@@ -321,6 +364,9 @@
              <widget class="QLabel" name="lbl_acc">
               <property name="text">
                <string>20</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
               </property>
              </widget>
             </item>
