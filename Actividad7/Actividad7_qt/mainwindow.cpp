@@ -60,6 +60,7 @@ void MainWindow::update_image(cv::Mat &newMat)
 
 void MainWindow::resizeEvent(QResizeEvent *event)
 {
+    Q_UNUSED(event);
     //int h = event->size().height();
     //int w = event->size().width();
     //std::cout << "h: " << h << "w: " << w <<std::endl;
@@ -79,23 +80,14 @@ cv::Mat corregirPerspectiva(cv::Mat &src)
     //aplicamos un filtro bilateral que preserva bordes
     cv::Mat thr;
     cv::bilateralFilter(src_gray, thr, 5, 75, 75);
-    //cv::imshow("thr", thr);
-    //cv::waitKey(0);
     //aplicamos un threshold para que nos quede una imagen binaria
-    //cv::threshold(thr, thr, 170, 255, cv::THRESH_BINARY);
     cv::adaptiveThreshold(thr, thr, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY, 57, 4);
-    //cv::imshow("thr", thr);
-    //cv::waitKey(0);
     //filtro de la mediana para limpiar pequenios detalles
     cv::medianBlur(thr, thr, 5);
-    //cv::imshow("thr", thr);
-    //cv::waitKey(0);
     //agregamos un borde negro en caso de que la hoja este tocando un borde de la imagen
     cv::copyMakeBorder(thr, thr, 5, 5, 5, 5, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
     cv::Mat edges;
     cv::Canny(thr, edges, 200, 250);
-    //cv::imshow("edges", edges);
-    //cv::waitKey(0);
     //ahora que tenemos los bordes, encontramos el contorno
     //cv::Mat contours;
     std::vector<std::vector<cv::Point>> contours;
@@ -219,7 +211,7 @@ void MainWindow::obtener_thresholds(cv::Mat &src, std::vector<cv::Mat> &dst)
     cv::Scalar rosa_high_2 = cv::Scalar(360/2, 0.45*255, 0.9*255);
 
     cv::Scalar naranja_low = cv::Scalar(20/2, 0.35*255, 0.5*255);
-    cv::Scalar naranja_high = cv::Scalar(36/2, 0.60*255, 0.80*255);
+    cv::Scalar naranja_high = cv::Scalar(39/2, 0.60*255, 0.80*255);
 
     cv::Scalar amarillo_low = cv::Scalar(40/2, 0.25*255, 0.50*255);
     cv::Scalar amarillo_high = cv::Scalar(70/2, 0.99*255, 0.99*255);
@@ -238,109 +230,127 @@ void MainWindow::obtener_thresholds(cv::Mat &src, std::vector<cv::Mat> &dst)
     cv::inRange(img_hsv, amarillo_low, amarillo_high, thresh_amarillo);
     cv::inRange(img_hsv, chocolate_low, chocolate_high, thresh_chocolate);
 
+    //filtramos y limpiamos las imagenes
+    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(9, 9));
+    cv::morphologyEx(thresh_rosa, thresh_rosa, cv::MORPH_OPEN, kernel);
+    cv::morphologyEx(thresh_rosa, thresh_rosa, cv::MORPH_CLOSE, kernel);
+    cv::morphologyEx(thresh_naranja, thresh_naranja, cv::MORPH_OPEN, kernel);
+    cv::morphologyEx(thresh_naranja, thresh_naranja, cv::MORPH_CLOSE, kernel);
+    cv::morphologyEx(thresh_amarillo, thresh_amarillo, cv::MORPH_OPEN, kernel);
+    cv::morphologyEx(thresh_amarillo, thresh_amarillo, cv::MORPH_CLOSE, kernel);
+    cv::morphologyEx(thresh_chocolate, thresh_chocolate, cv::MORPH_OPEN, kernel);
+    cv::morphologyEx(thresh_chocolate, thresh_chocolate, cv::MORPH_CLOSE, kernel);
+    cv::GaussianBlur(thresh_rosa,thresh_rosa,cv::Size(5,5),0);
+    cv::GaussianBlur(thresh_naranja,thresh_naranja,cv::Size(5,5),0);
+    cv::GaussianBlur(thresh_amarillo,thresh_amarillo,cv::Size(5,5),0);
+    cv::GaussianBlur(thresh_chocolate,thresh_chocolate,cv::Size(5,5),0);
+
+
     dst.push_back(thresh_rosa);
     dst.push_back(thresh_naranja);
     dst.push_back(thresh_amarillo);
     dst.push_back(thresh_chocolate);
 }
 
+void pintarCirculos(cv::InputOutputArray &src, std::vector<cv::Vec3f> &circulos, cv::Scalar color)
+{
+    if (circulos.size() > 0)
+    {
+        for (size_t current_circle = 0; current_circle < circulos.size(); ++current_circle)
+        {
+            cv::Point center(std::round(circulos[current_circle][0]), std::round(circulos[current_circle][1]));
+            int radius = std::round(circulos[current_circle][2]);
+            cv::circle(src, center, radius, color, 5);
+        }
+    }
+}
+
+bool isInside(int circle_x, int circle_y,
+                   int rad, int x, int y)
+{
+    // Compare radius of circle with distance
+    // of its center from given point
+    return ((x - circle_x) * (x - circle_x) +
+        (y - circle_y) * (y - circle_y) <= rad * rad);
+}
+
 cv::Mat MainWindow::procesar(cv::Mat &src)
 {
     //empezamos por corregir la perspectiva de la hoja
     cv::Mat corrected = corregirPerspectiva(src);
-    //ahora que tenemos la perspectiva corregida, procedemos a identificar circulos
     //filtramos la imagen para elimiar ruido
     cv::Mat filtered;
     cv::medianBlur(corrected,filtered,5);
     //aplicamos thresholds a la imagen para separar los colores que nos interesan
     std::vector<cv::Mat> masks;
     obtener_thresholds(corrected, masks);
-    cvMats[CVMAT_ROSA] = masks[0];
-    cvMats[CVMAT_NARANJA] = masks[1];
-    cvMats[CVMAT_AMARILLO] = masks[2];
-    cvMats[CVMAT_CHOCOLATE] = masks[3];
-
-    //aplicamos operaciones morfologicas (apertura + cierre) para eliminar imperfecciones
-
-    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(9, 9));
-    cv::morphologyEx(cvMats[CVMAT_ROSA], cvMats[CVMAT_ROSA], cv::MORPH_OPEN, kernel);
-    cv::morphologyEx(cvMats[CVMAT_ROSA], cvMats[CVMAT_ROSA], cv::MORPH_CLOSE, kernel);
-    cv::morphologyEx(cvMats[CVMAT_NARANJA], cvMats[CVMAT_NARANJA], cv::MORPH_OPEN, kernel);
-    cv::morphologyEx(cvMats[CVMAT_NARANJA], cvMats[CVMAT_NARANJA], cv::MORPH_CLOSE, kernel);
-    cv::morphologyEx(cvMats[CVMAT_AMARILLO], cvMats[CVMAT_AMARILLO], cv::MORPH_OPEN, kernel);
-    cv::morphologyEx(cvMats[CVMAT_AMARILLO], cvMats[CVMAT_AMARILLO], cv::MORPH_CLOSE, kernel);
-    cv::morphologyEx(cvMats[CVMAT_CHOCOLATE], cvMats[CVMAT_CHOCOLATE], cv::MORPH_OPEN, kernel);
-    cv::morphologyEx(cvMats[CVMAT_CHOCOLATE], cvMats[CVMAT_CHOCOLATE], cv::MORPH_CLOSE, kernel);
-    cv::GaussianBlur(cvMats[CVMAT_ROSA],cvMats[CVMAT_ROSA],cv::Size(5,5),0);
-    cv::GaussianBlur(cvMats[CVMAT_NARANJA],cvMats[CVMAT_NARANJA],cv::Size(5,5),0);
-    cv::GaussianBlur(cvMats[CVMAT_AMARILLO],cvMats[CVMAT_AMARILLO],cv::Size(5,5),0);
-    cv::GaussianBlur(cvMats[CVMAT_CHOCOLATE],cvMats[CVMAT_CHOCOLATE],cv::Size(5,5),0);
 
     //aplicamos los thresholds como mascara a la imagen en escala de gris
     cv::Mat filtered_gray;
     cv::cvtColor(filtered,filtered_gray,cv::COLOR_BGR2GRAY);
-    cv::bitwise_and(filtered_gray,cvMats[CVMAT_ROSA],cvMats[CVMAT_ROSA]);
-    cv::bitwise_and(filtered_gray,cvMats[CVMAT_NARANJA],cvMats[CVMAT_NARANJA]);
-    cv::bitwise_and(filtered_gray,cvMats[CVMAT_AMARILLO],cvMats[CVMAT_AMARILLO]);
-    cv::bitwise_and(filtered_gray,cvMats[CVMAT_CHOCOLATE],cvMats[CVMAT_CHOCOLATE]);
+    cv::bitwise_and(filtered_gray,masks[0],cvMats[CVMAT_ROSA]);
+    cv::bitwise_and(filtered_gray,masks[1],cvMats[CVMAT_NARANJA]);
+    cv::bitwise_and(filtered_gray,masks[2],cvMats[CVMAT_AMARILLO]);
+    cv::bitwise_and(filtered_gray,masks[3],cvMats[CVMAT_CHOCOLATE]);
 
     //usamos el metodo de hough para encontrar circulos
-    std::vector<cv::Vec3f> circulos_rosa;
-    std::vector<cv::Vec3f> circulos_naranja;
-    std::vector<cv::Vec3f> circulos_amarillo;
-    std::vector<cv::Vec3f> circulos_chocolate;
-    int param1 = (corrected.rows * ui->lbl_minDist->text().toInt())/100; //minDist
+    std::vector<cv::Vec3f> circulos_rosa,circulos_naranja,circulos_amarillo,circulos_chocolate;
+    int param1 = (corrected.rows * ui->lbl_minDist->text().toInt())/100; //minDist distancia minima entre circulos
     int param2 = ui->lbl_thresh->text().toInt(); //high thresh of the edge detector
     int param3 = ui->lbl_acc->text().toInt(); //accumulator
     int param4 = ui->lbl_minRad->text().toInt(); //minradius
     int param5 = ui->lbl_maxRad->text().toInt(); //maxradius
-    cv::HoughCircles(cvMats[CVMAT_ROSA], circulos_rosa, cv::HOUGH_GRADIENT, 1,
-                     param1, // change this value to detect circles with different distances to each other
-                     param2,param3,param4,param5); // change the last two parameters (min_radius & max_radius) to detect larger circles
+    cv::HoughCircles(cvMats[CVMAT_ROSA], circulos_rosa, cv::HOUGH_GRADIENT, 1,param1, param2,param3,param4,param5);
+    cvCircles[CVCIRCLE_ROSA] = circulos_rosa;
     cv::HoughCircles(cvMats[CVMAT_NARANJA], circulos_naranja, cv::HOUGH_GRADIENT, 1, param1,param2,param3,param4,param5);
+    cvCircles[CVCIRCLE_NARANJA] = circulos_naranja;
     cv::HoughCircles(cvMats[CVMAT_AMARILLO], circulos_amarillo, cv::HOUGH_GRADIENT, 1, param1,param2,param3,param4,param5);
+    cvCircles[CVCIRCLE_AMARILLO] = circulos_amarillo;
     cv::HoughCircles(cvMats[CVMAT_CHOCOLATE], circulos_chocolate, cv::HOUGH_GRADIENT, 1, param1,param2,param3,param4,param5);
+    cvCircles[CVCIRCLE_CHOCOLATE] = circulos_chocolate;
     //iteramos sobre los circulos encontrados para dibujar un circulo en la imagen original
-    if (circulos_rosa.size() > 0)
-    {
-        for (size_t current_circle = 0; current_circle < circulos_rosa.size(); ++current_circle)
-        {
-            cv::Point center(std::round(circulos_rosa[current_circle][0]), std::round(circulos_rosa[current_circle][1]));
-            int radius = std::round(circulos_rosa[current_circle][2]);
+    //cv::Mat dst;
+    pintarCirculos(corrected, cvCircles[CVCIRCLE_ROSA], cvColors[CVCOLOR_ROSA]);
+    pintarCirculos(corrected, cvCircles[CVCIRCLE_NARANJA], cvColors[CVCOLOR_NARANJA]);
+    pintarCirculos(corrected, cvCircles[CVCIRCLE_AMARILLO], cvColors[CVCOLOR_AMARILLO]);
+    pintarCirculos(corrected, cvCircles[CVCIRCLE_CHOCOLATE], cvColors[CVCOLOR_CHOCOLATE]);
 
-            cv::circle(corrected, center, radius, cv::Scalar(181,113,255,255), 5);
+    //intentamos encontrar galletitas rotas
+    //para esto, encontramos todos los contornos y luego vemos que contorno no pertenece a ningun circulo previamente encontrado
+    cv::Mat mask;
+    cv::bitwise_or(masks[0],masks[1],mask);
+    cv::bitwise_or(mask,masks[2],mask);
+    cv::bitwise_or(mask,masks[3],mask);
+    std::vector<std::vector<cv::Point>> contours;
+    cv::findContours(mask, contours,cv::RETR_TREE,cv::CHAIN_APPROX_SIMPLE);
+    for(auto cnt : contours)
+    {
+        //obtenemos el centro del contorno
+        cv::Moments m = cv::moments(cnt);
+        int cx = int(m.m10/m.m00);
+        int cy = int(m.m01/m.m00);
+        //si ese punto no cae dentro de un circulo ya encontrado, significa que es una galleta rota
+        bool dentro = false;
+        for(auto circles : cvCircles)
+        {
+            if(!dentro)
+            for(auto circle : circles)
+            {
+                if(!dentro)
+                {
+                    dentro = isInside(circle[0],circle[1],circle[2],cx,cy);
+                }
+            }
+        }
+
+        if(!dentro)
+        {
+            //lo marcamos en la imagen ya que es
+            cv::drawMarker(corrected,cv::Point(cx,cy),cv::Scalar(255,0,0,255));
+
         }
     }
-    if (circulos_naranja.size() > 0)
-    {
-        for (size_t current_circle = 0; current_circle < circulos_naranja.size(); ++current_circle)
-        {
-            cv::Point center(std::round(circulos_naranja[current_circle][0]), std::round(circulos_naranja[current_circle][1]));
-            int radius = std::round(circulos_naranja[current_circle][2]);
 
-            cv::circle(corrected, center, radius, cv::Scalar(16,64,180,255), 5);
-        }
-    }
-    if (circulos_amarillo.size() > 0)
-    {
-        for (size_t current_circle = 0; current_circle < circulos_amarillo.size(); ++current_circle)
-        {
-            cv::Point center(std::round(circulos_amarillo[current_circle][0]), std::round(circulos_amarillo[current_circle][1]));
-            int radius = std::round(circulos_amarillo[current_circle][2]);
-
-            cv::circle(corrected, center, radius, cv::Scalar(0,255,255,255), 5);
-        }
-    }
-    if (circulos_chocolate.size() > 0)
-    {
-        for (size_t current_circle = 0; current_circle < circulos_chocolate.size(); ++current_circle)
-        {
-            cv::Point center(std::round(circulos_chocolate[current_circle][0]), std::round(circulos_chocolate[current_circle][1]));
-            int radius = std::round(circulos_chocolate[current_circle][2]);
-
-            cv::circle(corrected, center, radius, cv::Scalar(18,52,98,255),5);
-        }
-    }
     return corrected;
 }
 
@@ -365,6 +375,7 @@ void MainWindow::resetUi()
     ui->radioBtn_naranja->setDisabled(true);
     ui->radioBtn_rosa->setDisabled(true);
     ui->radioBtn_result->setDisabled(true);
+    ui->radioBtn_chocolate->setDisabled(true);
     ui->radioBtn_result->setChecked(true);
 }
 
@@ -395,15 +406,24 @@ void MainWindow::on_btn_procesar_clicked()
     ui->radioBtn_rosa->setEnabled(true);
     ui->radioBtn_naranja->setEnabled(true);
     ui->radioBtn_amarillo->setEnabled(true);
+    ui->radioBtn_chocolate->setEnabled(true);
     ui->btn_save->setEnabled(true);
 }
 
 void MainWindow::on_btn_save_clicked()
 {
     QString filename = QFileDialog::getSaveFileName(this,
-                                                    tr("Save Image"),"",
-                                                    tr("jpg (*.jpg);;png (*.png);;All Files (*)"));
-    cv::imwrite(filename.toStdString(), cvMats[CVMAT_RESULT]);
+                                                    tr("Save Image"),"result.jpg",
+                                                    tr("Images (*.jpg *.jpeg *.jpe *.jp2 *.png *.bmp *.dib);;All Files (*)"));
+    if(!filename.isEmpty())
+    {
+        QFileInfo fileinfo(filename);
+        if(fileinfo.suffix().isEmpty())
+        {
+            filename += ".jpg";
+        }
+        cv::imwrite(filename.toStdString(), cvMats[CVMAT_RESULT]);
+    }
 }
 
 void MainWindow::on_radioBtn_rosa_clicked()

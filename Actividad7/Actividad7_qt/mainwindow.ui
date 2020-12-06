@@ -259,6 +259,9 @@
         </item>
         <item>
          <widget class="QRadioButton" name="radioBtn_chocolate">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="text">
            <string>Chocolate</string>
           </property>

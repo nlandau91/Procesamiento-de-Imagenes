@@ -21,6 +21,18 @@ class MainWindow : public QMainWindow
         CVMAT_RESULT,
         CVMAT_ACTUAL
     };
+    enum cvCircles{
+        CVCIRCLE_ROSA,
+        CVCIRCLE_NARANJA,
+        CVCIRCLE_AMARILLO,
+        CVCIRCLE_CHOCOLATE
+    };
+    enum cvColors{
+        CVCOLOR_ROSA,
+        CVCOLOR_NARANJA,
+        CVCOLOR_AMARILLO,
+        CVCOLOR_CHOCOLATE
+    };
 
 public:
     MainWindow(QWidget *parent = nullptr);
@@ -66,6 +78,8 @@ private slots:
 private:
     Ui::MainWindow *ui;
     cv::Mat cvMats[7];
+    std::vector<cv::Vec3f> cvCircles[4];
+    cv::Scalar cvColors[4] = {cv::Scalar(181,113,255,255),cv::Scalar(16,64,180,255),cv::Scalar(0,255,255,255),cv::Scalar(18,52,98,255)};
 
     void update_image(cv::Mat &newMat);
     void resizeEvent(QResizeEvent *event);
