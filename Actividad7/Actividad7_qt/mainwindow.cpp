@@ -125,7 +125,7 @@ cv::Mat corregirPerspectiva(cv::Mat &src)
                 {
                     maxAreaFound = area;
                     pageContour = approx;
-                   // maxidx = idx;
+                    // maxidx = idx;
                 }
             }
         }
@@ -205,19 +205,19 @@ void MainWindow::obtener_thresholds(cv::Mat &src, std::vector<cv::Mat> &dst)
     //V va de 0 a 255
 
     cv::Scalar rosa_low_1 = cv::Scalar(0/2, 0.15*255, 0.55*255);
-    cv::Scalar rosa_high_1 = cv::Scalar(25/2,0.45*255, 0.9*255);
+    cv::Scalar rosa_high_1 = cv::Scalar(25/2,0.45*255, 0.99*255);
 
     cv::Scalar rosa_low_2 = cv::Scalar(290/2, 0.15*255, 0.55*255);
-    cv::Scalar rosa_high_2 = cv::Scalar(360/2, 0.45*255, 0.9*255);
+    cv::Scalar rosa_high_2 = cv::Scalar(360/2, 0.45*255, 0.99*255);
 
-    cv::Scalar naranja_low = cv::Scalar(20/2, 0.35*255, 0.5*255);
-    cv::Scalar naranja_high = cv::Scalar(39/2, 0.60*255, 0.80*255);
+    cv::Scalar naranja_low = cv::Scalar(21/2, 0.35*255, 0.51*255);
+    cv::Scalar naranja_high = cv::Scalar(39/2, 0.70*255, 0.85*255);
 
-    cv::Scalar amarillo_low = cv::Scalar(40/2, 0.25*255, 0.50*255);
-    cv::Scalar amarillo_high = cv::Scalar(70/2, 0.99*255, 0.99*255);
+    cv::Scalar amarillo_low = cv::Scalar(40/2, 0.15*255, 0.50*255);
+    cv::Scalar amarillo_high = cv::Scalar(70/2, 0.99*255, 1.00*255);
 
     cv::Scalar chocolate_low = cv::Scalar(10/2, 0.30*255, 0.35*255);
-    cv::Scalar chocolate_high = cv::Scalar(25/2, 0.50*255, 0.55*255);
+    cv::Scalar chocolate_high = cv::Scalar(25/2, 0.60*255, 0.60*255);
 
 
 
@@ -266,12 +266,75 @@ void pintarCirculos(cv::InputOutputArray &src, std::vector<cv::Vec3f> &circulos,
 }
 
 bool isInside(int circle_x, int circle_y,
-                   int rad, int x, int y)
+              int rad, int x, int y)
 {
     // Compare radius of circle with distance
     // of its center from given point
     return ((x - circle_x) * (x - circle_x) +
-        (y - circle_y) * (y - circle_y) <= rad * rad);
+            (y - circle_y) * (y - circle_y) <= rad * rad);
+}
+
+//dado un arreglo de circulos y de contornos, removemos falsos positivos de circulos
+std::vector<cv::Vec3f> removerFalsosPositivos(std::vector<cv::Vec3f> &circulos, std::vector<std::vector<cv::Point>> &contornos)
+{
+    std::vector<cv::Vec3f> positivos;
+    for(std::vector<cv::Point> cnt : contornos)
+    {
+        //obtenemos el centro del contorno
+        cv::Moments m = cv::moments(cnt);
+        int cx = int(m.m10/m.m00);
+        int cy = int(m.m01/m.m00);
+        //si ese punto no cae dentro de un circulo ya encontrado, significa que es una galleta rota
+        bool dentro = false;
+        double circleArea = 0.0;
+        for(cv::Vec3f circulo : circulos)
+        {
+            //vemos si el contorno corresponde a un circulo detectado
+            dentro = isInside(circulo[0],circulo[1],circulo[2],cx,cy);
+            if(dentro)
+            {
+                //nos sacamos algunos falsos positivos de encima comparando las areas
+                const double pi = 3.14159265358979323846;
+                circleArea = pi * pow(circulo[2],2);
+                //el area del contorno debe ser al menos 3/4 del area del circulo
+                double cntArea = cv::contourArea(cnt);
+                dentro = cntArea >= 0.75 * circleArea;
+                if(dentro)
+                {
+                    positivos.push_back(circulo);
+                }
+            }
+        }
+    }
+    return positivos;
+}
+
+//dado un arreglo de circulos y de contornos, vemos que contorno no corresponde a un circulo
+std::vector<cv::Point> detectarRotas(std::vector<cv::Vec3f> &circulos, std::vector<std::vector<cv::Point>> &contornos)
+{
+    std::vector<cv::Point> rotas;
+    for(std::vector<cv::Point> cnt : contornos)
+    {
+        //obtenemos el centro del contorno
+        cv::Moments m = cv::moments(cnt);
+        int cx = int(m.m10/m.m00);
+        int cy = int(m.m01/m.m00);
+        //si ese punto no cae dentro de un circulo ya encontrado, significa que es una galleta rota
+        bool dentro = false;
+        for(cv::Vec3f circulo : circulos)
+        {
+            if(!dentro)
+            {
+                //vemos si el contorno corresponde a un circulo detectado
+                dentro = isInside(circulo[0],circulo[1],circulo[2],cx,cy);
+            }
+        }
+        if(dentro)
+        {
+            rotas.push_back(cv::Point(cx,cy));
+        }
+    }
+    return rotas;
 }
 
 cv::Mat MainWindow::procesar(cv::Mat &src)
@@ -308,12 +371,6 @@ cv::Mat MainWindow::procesar(cv::Mat &src)
     cvCircles[CVCIRCLE_AMARILLO] = circulos_amarillo;
     cv::HoughCircles(cvMats[CVMAT_CHOCOLATE], circulos_chocolate, cv::HOUGH_GRADIENT, 1, param1,param2,param3,param4,param5);
     cvCircles[CVCIRCLE_CHOCOLATE] = circulos_chocolate;
-    //iteramos sobre los circulos encontrados para dibujar un circulo en la imagen original
-    //cv::Mat dst;
-    pintarCirculos(corrected, cvCircles[CVCIRCLE_ROSA], cvColors[CVCOLOR_ROSA]);
-    pintarCirculos(corrected, cvCircles[CVCIRCLE_NARANJA], cvColors[CVCOLOR_NARANJA]);
-    pintarCirculos(corrected, cvCircles[CVCIRCLE_AMARILLO], cvColors[CVCOLOR_AMARILLO]);
-    pintarCirculos(corrected, cvCircles[CVCIRCLE_CHOCOLATE], cvColors[CVCOLOR_CHOCOLATE]);
 
     //intentamos encontrar galletitas rotas
     //para esto, encontramos todos los contornos y luego vemos que contorno no pertenece a ningun circulo previamente encontrado
@@ -331,24 +388,44 @@ cv::Mat MainWindow::procesar(cv::Mat &src)
         int cy = int(m.m01/m.m00);
         //si ese punto no cae dentro de un circulo ya encontrado, significa que es una galleta rota
         bool dentro = false;
-        for(auto circles : cvCircles)
+        double circleArea = 0.0;
+        for(std::vector<cv::Vec3f> circles : cvCircles)
         {
-            if(!dentro)
-            for(auto circle : circles)
+            for(cv::Vec3f circle : circles)
             {
-                if(!dentro)
+                //vemos si el contorno corresponde a un circulo detectado
+                dentro = isInside(circle[0],circle[1],circle[2],cx,cy);
+                if(dentro)
                 {
-                    dentro = isInside(circle[0],circle[1],circle[2],cx,cy);
+                    //nos sacamos algunos falsos positivos de encima comparando las areas
+                    const double pi = 3.14159265358979323846;
+                    circleArea = pi * pow(circle[2],2);
+                    //el area del contorno debe ser al menos 3/4 del area del circulo
+                    double cntArea = cv::contourArea(cnt);
+                    dentro = cntArea >= 0.75 * circleArea;
+                    if(dentro)
+                    {
+
+                    }
                 }
             }
         }
-
         if(!dentro)
         {
-            //lo marcamos en la imagen ya que es
-            cv::drawMarker(corrected,cv::Point(cx,cy),cv::Scalar(255,0,0,255));
-
+            rotas.push_back(cv::Point(cx,cy));
         }
+    }
+
+    //iteramos sobre los circulos encontrados para dibujar un circulo en la imagen original
+    pintarCirculos(corrected, cvCircles[CVCIRCLE_ROSA], cvColors[CVCOLOR_ROSA]);
+    pintarCirculos(corrected, cvCircles[CVCIRCLE_NARANJA], cvColors[CVCOLOR_NARANJA]);
+    pintarCirculos(corrected, cvCircles[CVCIRCLE_AMARILLO], cvColors[CVCOLOR_AMARILLO]);
+    pintarCirculos(corrected, cvCircles[CVCIRCLE_CHOCOLATE], cvColors[CVCOLOR_CHOCOLATE]);
+
+    //iteramos sobre los puntos detectados como pedazos rotos
+    for(cv::Point p : rotas)
+    {
+        cv::drawMarker(corrected,p,cv::Scalar(255,0,0,255));
     }
 
     return corrected;
