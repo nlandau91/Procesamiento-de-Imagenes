@@ -1,0 +1,8 @@
+Entrar en la carpeta Actividad7_qt
+    $ cd Actividad7_qt
+Generar el make utilizando qmake
+    $ qmake
+Generar el binario a partir del makefile
+    $ makefile
+Ejecutar
+    $ ./Actividad7_qt

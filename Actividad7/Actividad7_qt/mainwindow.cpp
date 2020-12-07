@@ -443,12 +443,12 @@ void MainWindow::resetUi()
 
 void MainWindow::on_btn_load_clicked()
 {
-    resetUi();
     QString fileName = QFileDialog::getOpenFileName(this,
                                                     tr("Open Image"), "",
                                                     tr("Images (*.jpg *.jpeg *.jpe *.jp2 *.png *.bmp *.dib);;All Files (*)"));
     if(!fileName.isEmpty())
     {
+        resetUi();
         cvMats[CVMAT_ORIGINAL] = cv::imread(fileName.toStdString(),cv::IMREAD_UNCHANGED);
         if(!cvMats[CVMAT_ORIGINAL].empty())
         {

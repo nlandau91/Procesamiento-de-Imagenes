@@ -109,6 +109,9 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="autoFillBackground">
+         <bool>false</bool>
+        </property>
         <property name="frameShape">
          <enum>QFrame::StyledPanel</enum>
         </property>
@@ -142,6 +145,20 @@
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_8">
         <item>
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>Parametros HoughCircles()</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="Line" name="line">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
          <layout class="QHBoxLayout" name="horizontalLayout_3">
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_13">
@@ -154,6 +171,9 @@
             </item>
             <item alignment="Qt::AlignHCenter">
              <widget class="QSlider" name="verticalSlider_minDist">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Distancia minima entre el centro (x, y) de los circulos detectados.&lt;/p&gt;&lt;p&gt;Si es muy pequeño, varios circulos en la cercania del original pueden ser falsamente detectados.&lt;/p&gt;&lt;p&gt;Si es muy grande, algunos circulos podrian no ser detectados.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
               <property name="minimum">
                <number>1</number>
               </property>
@@ -206,6 +226,9 @@
             </item>
             <item alignment="Qt::AlignHCenter">
              <widget class="QSlider" name="verticalSlider_minRad">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Tamaño minimo del radio de los circulos en pixel.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
               <property name="maximum">
                <number>999</number>
               </property>
@@ -240,6 +263,9 @@
             </item>
             <item alignment="Qt::AlignHCenter">
              <widget class="QSlider" name="verticalSlider_maxRad">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Tamaño maximo del radio de los circulos en pixel.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
               <property name="maximum">
                <number>999</number>
               </property>
@@ -266,6 +292,13 @@
          </layout>
         </item>
         <item>
+         <widget class="Line" name="line_2">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
          <layout class="QHBoxLayout" name="horizontalLayout_2">
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -278,6 +311,9 @@
             </item>
             <item alignment="Qt::AlignHCenter">
              <widget class="QSlider" name="verticalSlider_dp">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Resolucion del arreglo acumulador. &lt;/p&gt;&lt;p&gt;Si es muy pequeño solo los circulos perfectos seran encontrados. &lt;/p&gt;&lt;p&gt;Si es muy grande se pueden tener muchos falsos positivos.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
               <property name="minimum">
                <number>10</number>
               </property>
@@ -309,6 +345,9 @@
             </item>
             <item alignment="Qt::AlignHCenter">
              <widget class="QSlider" name="verticalSlider_thresh">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Parametro enviado al detector de bordes de Canny.&lt;/p&gt;&lt;p&gt;Es el primer umbral para el procedimiento de histeresis&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
               <property name="minimum">
                <number>1</number>
               </property>
@@ -346,6 +385,9 @@
             </item>
             <item alignment="Qt::AlignHCenter">
              <widget class="QSlider" name="verticalSilder_acc">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Umbral del acumulador para el metodo cv::HOUGH_GRADIENT.&lt;/p&gt;&lt;p&gt;Mientras mas pequeño es, mas circulos seran detectados (incluidos falsos positivos).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
               <property name="minimum">
                <number>1</number>
               </property>
