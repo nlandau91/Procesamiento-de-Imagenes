@@ -182,22 +182,25 @@ cv::Mat corregirPerspectiva(cv::Mat &src)
         }
     }
 
+    //elegimos los puntos destino
     std::vector<cv::Point2f> squre_pts; //puntos destino
-    //cv::Rect boundRect = cv::boundingRect(pageContour);
-    //squre_pts.push_back(cv::Point2f(boundRect.x, boundRect.y));
-    //squre_pts.push_back(cv::Point2f(boundRect.x, boundRect.y + boundRect.height));
-    //squre_pts.push_back(cv::Point2f(boundRect.x + boundRect.width, boundRect.y + boundRect.height));
-    //squre_pts.push_back(cv::Point2f(boundRect.x + boundRect.width, boundRect.y));
-    int cols = src.cols;
-    int rows = src.rows;
-    squre_pts.push_back(cv::Point2f(0,0));
-    squre_pts.push_back(cv::Point2f(0,rows));
-    squre_pts.push_back(cv::Point2f(cols,rows));
-    squre_pts.push_back(cv::Point2f(cols,0));
+    cv::Rect boundRect = cv::boundingRect(pageContour);
+    squre_pts.push_back(cv::Point2f(boundRect.x, boundRect.y));
+    squre_pts.push_back(cv::Point2f(boundRect.x, boundRect.y + boundRect.height));
+    squre_pts.push_back(cv::Point2f(boundRect.x + boundRect.width, boundRect.y + boundRect.height));
+    squre_pts.push_back(cv::Point2f(boundRect.x + boundRect.width, boundRect.y));
+    //int cols = src.cols;
+    //int rows = src.rows;
+    //squre_pts.push_back(cv::Point2f(0,0));
+    //squre_pts.push_back(cv::Point2f(0,rows));
+    //squre_pts.push_back(cv::Point2f(cols,rows));
+    //squre_pts.push_back(cv::Point2f(cols,0));
     cv::Mat transmtx = cv::getPerspectiveTransform(quad_pts, squre_pts);
     cv::Mat transformed = cv::Mat::zeros(src.rows, src.cols, CV_8UC3);
     cv::warpPerspective(src, transformed, transmtx, src.size());
-    return transformed;
+    cv::Mat result = cv::Mat::zeros(boundRect.height, boundRect.width, CV_8UC3);
+    transformed(boundRect).copyTo(result);
+    return result;
 }
 
 void obtener_thresholds(cv::Mat &src, std::vector<cv::Mat> &dst)
